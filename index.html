@@ -7,67 +7,57 @@
     <title>GGFAN Employee Sign-In</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "YOUR_ONESIGNAL_APP_ID",
-      serviceWorkerParam: { scope: "/ggfan-signin/onesignal/" },
-      serviceWorkerPath: "/ggfan-signin/OneSignalSDKWorker.js"
-    });
 
-    // Show the orange button if notifications are not yet enabled
-    if (!OneSignal.Notifications.permission) {
-      var pushBtn = document.getElementById('enablePushBtn');
-      if (pushBtn) pushBtn.style.display = 'block';
-    }
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      // ✅ PASTE YOUR REAL ONESIGNAL APP ID HERE:
+      const ONESIGNAL_APP_ID = "912d857b-e5a3-4267-bbcb-56bcf138cee2";
 
-    // Hide the button automatically once permission is granted
-    OneSignal.Notifications.addEventListener('permissionChange', function(granted) {
-      var pushBtn = document.getElementById('enablePushBtn');
-      if (pushBtn) pushBtn.style.display = granted ? 'none' : 'block';
-    });
-  });
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        try {
+          await OneSignal.init({
+            appId: ONESIGNAL_APP_ID,
+            serviceWorkerParam: { scope: "/ggfan-signin/onesignal/" },
+            serviceWorkerPath: "/ggfan-signin/OneSignalSDKWorker.js"
+          });
 
-  async function enableNotifications() {
-    var btn = document.getElementById('enablePushBtn');
-    var gateText = document.getElementById('notif-gate-text');
-    if (btn) {
-      btn.disabled = true;
-      btn.innerText = 'Subscribing...';
-    }
+          // If permission is already granted, ensure OneSignal opt-in & External ID login are synced
+          if ('Notification' in window && Notification.permission === 'granted') {
+            if (!OneSignal.User.PushSubscription.optedIn) {
+              await OneSignal.User.PushSubscription.optIn();
+            }
+            var savedId = localStorage.getItem('ggfan_emp_id');
+            if (savedId) {
+              await OneSignal.login(savedId);
+            }
+          }
 
-    try {
-      if (window.OneSignal && OneSignal.User && OneSignal.User.PushSubscription) {
-        await OneSignal.Notifications.requestPermission();
-        await OneSignal.User.PushSubscription.optIn();
-      } else {
-        throw new Error('OneSignal SDK is still loading or Site URL does not match.');
-      }
-    } catch (e) {
-      if (gateText) {
-        gateText.innerHTML = '⚠️ <b>Error:</b> ' + (e.message || e);
-      }
-    }
+          checkNotificationGate();
 
-    if (btn) {
-      btn.disabled = false;
-      btn.innerText = '🔔 Enable Notification';
-    }
-
-    if (checkNotificationGate()) {
-      var savedId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id');
-      if (savedId) {
-        document.getElementById('empId').value = savedId;
-        if (window.OneSignal && OneSignal.login) {
-          await OneSignal.login(savedId);
+          // Automatically hide gate & unlock form when permission turns on
+          OneSignal.Notifications.addEventListener('permissionChange', async function(granted) {
+            if (checkNotificationGate() && granted) {
+              if (!OneSignal.User.PushSubscription.optedIn) {
+                await OneSignal.User.PushSubscription.optIn();
+              }
+              var idToLink = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id');
+              if (idToLink) {
+                document.getElementById('empId').value = idToLink;
+                await OneSignal.login(idToLink);
+                handleIdInput();
+              }
+            }
+          });
+        } catch (err) {
+          var gateText = document.getElementById('notif-gate-text');
+          if (gateText) {
+            gateText.innerHTML = '⚠️ <b>OneSignal Error:</b> ' + (err.message || err);
+          }
         }
-        handleIdInput();
-      }
-    }
-  }
-</script>
+      });
+    </script>
+
     <style>
       body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f4f7f6; margin: 0; }
       .container { max-width: 400px; margin: 30px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); box-sizing: border-box; }
@@ -88,6 +78,10 @@
       .notice-list li { margin-bottom: 4px; }
       .notice-list li:last-child { margin-bottom: 0; }
 
+      #notif-gate { background-color: #fff8f8; border: 1px solid #f5c6cb; border-left: 5px solid #CC0000; border-radius: 8px; padding: 18px; margin-bottom: 15px; text-align: center; }
+      #notif-gate-title { margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #CC0000; }
+      #notif-gate-text { margin: 0 0 14px 0; font-size: 13px; color: #333; line-height: 1.45; }
+
       label { font-weight: bold; color: #333; display: block; margin-top: 15px; font-size: 14px; }
       input { width: 100%; padding: 12px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
       button { width: 100%; padding: 14px; margin-top: 15px; background-color: #11572C; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; box-sizing: border-box; }
@@ -107,9 +101,7 @@
     <div class="container">
       <!-- Appears automatically on Android/Chrome when app is installable -->
       <button id="installAppBtn" type="button" onclick="triggerInstall()">📲 Install Sign-In App</button>
-<button id="enablePushBtn" type="button" onclick="enableNotifications()" style="display:none; width:100%; padding:12px; margin-top:0; margin-bottom:15px; background-color:#e67e22; color:white; border:none; border-radius:8px; font-size:15px; font-weight:bold; cursor:pointer; box-sizing:border-box;">
-  🔔 Enable Push Notifications
-</button>
+
       <div class="header">
         <img class="logo" src="https://lh3.googleusercontent.com/d/1OB43QbbcZO0gyvtELXZf_qaNgP_1h5dr" alt="GGFAN Logo">
         <h2>Employee Sign-In</h2>
@@ -122,7 +114,18 @@
       <!-- Populated dynamically from Google Sheets via getNotices() -->
       <div id="notice-board" class="notice-board"></div>
 
-      <div id="formDiv">
+      <!-- Notification Gate: locks the sign-in form until notifications are enabled -->
+      <div id="notif-gate">
+        <p id="notif-gate-title">🔔 Enable Notification</p>
+        <p id="notif-gate-text">
+          Please enable notifications to use the sign-in app and receive attendance reminders and off-site approvals.
+        </p>
+        <button type="button" id="enablePushBtn" onclick="enableNotifications()" style="margin-top: 0; background-color: #11572C;">
+          🔔 Enable Notification
+        </button>
+      </div>
+
+      <div id="formDiv" style="display: none;">
         <label>Employee ID</label>
         <input type="text" id="empId" placeholder="Enter your National ID..." oninput="handleIdInput()" required>
         
@@ -155,7 +158,7 @@
     </div>
 
     <script>
-      // 0A. Paste your Apps Script Web App /exec URL here:
+      // 0A. Apps Script Web App /exec URL
       const API_URL = "https://script.google.com/macros/s/AKfycbzaFBt7nVdvrasC4SDnj54kVfuulL0Q9mhlXWbXLl5FMfRMcbJecHk9s_5cA19q5bMqTQ/exec";
 
       // 0B. Compatibility bridge so google.script.run works over fetch()
@@ -249,6 +252,76 @@
         return div.innerHTML;
       }
 
+      // 0E. Notification Gate & Permission Request
+      function checkNotificationGate() {
+        var gate = document.getElementById('notif-gate');
+        var formDiv = document.getElementById('formDiv');
+        var gateText = document.getElementById('notif-gate-text');
+
+        if (!('Notification' in window)) {
+          if (gate) gate.style.display = 'none';
+          if (formDiv) formDiv.style.display = 'block';
+          return true;
+        }
+
+        if (Notification.permission === 'granted') {
+          if (gate) gate.style.display = 'none';
+          if (formDiv) formDiv.style.display = 'block';
+          return true;
+        } else {
+          if (formDiv) formDiv.style.display = 'none';
+          if (gate) gate.style.display = 'block';
+          if (Notification.permission === 'denied' && gateText) {
+            gateText.innerHTML = 'Notifications are currently blocked. Open <b>Phone Settings → Apps → GGFAN Sign-In → Notifications</b> (or Chrome site permissions), turn <b>Allow notifications</b> ON, then tap the button below.';
+          }
+          return false;
+        }
+      }
+
+      async function enableNotifications() {
+        var btn = document.getElementById('enablePushBtn');
+        var gateText = document.getElementById('notif-gate-text');
+        if (btn) {
+          btn.disabled = true;
+          btn.innerText = 'Enabling...';
+        }
+
+        try {
+          if ('Notification' in window && Notification.permission === 'default') {
+            await Notification.requestPermission();
+          }
+
+          if (window.OneSignal && OneSignal.User && OneSignal.User.PushSubscription) {
+            if (Notification.permission === 'granted') {
+              await OneSignal.User.PushSubscription.optIn();
+              var savedId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id');
+              if (savedId) {
+                await OneSignal.login(savedId);
+              }
+            }
+          } else {
+            throw new Error('OneSignal SDK is still loading. Wait 3 seconds and tap again.');
+          }
+        } catch (e) {
+          if (gateText) {
+            gateText.innerHTML = '⚠️ <b>Error:</b> ' + (e.message || e);
+          }
+        }
+
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = '🔔 Enable Notification';
+        }
+
+        if (checkNotificationGate()) {
+          var idToLoad = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id');
+          if (idToLoad) {
+            document.getElementById('empId').value = idToLoad;
+            handleIdInput();
+          }
+        }
+      }
+
       // 1. Live Ticking Clock
       function updateClock() {
         var now = new Date();
@@ -283,11 +356,13 @@
         // Load notices in background
         google.script.run.withSuccessHandler(renderNotices).getNotices();
 
-        // Auto-fill ID if this phone was already linked
-        var savedId = localStorage.getItem('ggfan_emp_id');
-        if (savedId) {
-          document.getElementById('empId').value = savedId;
-          handleIdInput();
+        // Only unlock and auto-fill the form if notifications are enabled
+        if (checkNotificationGate()) {
+          var savedId = localStorage.getItem('ggfan_emp_id');
+          if (savedId) {
+            document.getElementById('empId').value = savedId;
+            handleIdInput();
+          }
         }
       });
 
@@ -338,12 +413,16 @@
                 return;
               }
               
-              // Verified! Show Smart Action Button
-     if (window.OneSignalDeferred) {
-  window.OneSignalDeferred.push(function(OneSignal) {
-    OneSignal.login(empId);
-  });
-}
+              // Verified! Sync OneSignal opt-in & External ID, then show Smart Action Button
+              if (window.OneSignalDeferred) {
+                window.OneSignalDeferred.push(async function(OneSignal) {
+                  if (Notification.permission === 'granted' && !OneSignal.User.PushSubscription.optedIn) {
+                    await OneSignal.User.PushSubscription.optIn();
+                  }
+                  await OneSignal.login(empId);
+                });
+              }
+
               currentAction = res.nextAction;
               statusInfo.style.color = "#11572C";
               statusInfo.innerText = getSmartGreeting(res.name, currentAction);
@@ -433,6 +512,8 @@
 
       // 4. Form Submission with Geofencing & Device Token
       function submitForm() {
+        if (!checkNotificationGate()) return;
+
         var empId = document.getElementById('empId').value.trim();
         var deviceToken = localStorage.getItem('ggfan_device_token') || "";
         var msg = document.getElementById('message');
