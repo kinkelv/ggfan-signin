@@ -30,15 +30,42 @@
     });
   });
 
-  function enableNotifications() {
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.Notifications.requestPermission();
+  async function enableNotifications() {
+    var btn = document.getElementById('enablePushBtn');
+    var gateText = document.getElementById('notif-gate-text');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = 'Subscribing...';
+    }
+
+    try {
+      if (window.OneSignal && OneSignal.User && OneSignal.User.PushSubscription) {
+        await OneSignal.Notifications.requestPermission();
+        await OneSignal.User.PushSubscription.optIn();
+      } else {
+        throw new Error('OneSignal SDK is still loading or Site URL does not match.');
+      }
+    } catch (e) {
+      if (gateText) {
+        gateText.innerHTML = '⚠️ <b>Error:</b> ' + (e.message || e);
+      }
+    }
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = '🔔 Enable Notification';
+    }
+
+    if (checkNotificationGate()) {
       var savedId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id');
       if (savedId) {
-        await OneSignal.login(savedId);
+        document.getElementById('empId').value = savedId;
+        if (window.OneSignal && OneSignal.login) {
+          await OneSignal.login(savedId);
+        }
+        handleIdInput();
       }
-    });
+    }
   }
 </script>
     <style>
