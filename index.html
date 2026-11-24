@@ -7,15 +7,16 @@
     <title>GGFAN Employee Sign-In</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+ <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
-      appId: "912d857b-e5a3-4267-bbcb-56bcf138cee2",
-      serviceWorkerParam: { scope: "/ggfan-signin/" },
+      appId: "YOUR_ONESIGNAL_APP_ID",
+      serviceWorkerParam: { scope: "/ggfan-signin/onesignal/" },
       serviceWorkerPath: "/ggfan-signin/OneSignalSDKWorker.js"
     });
+    await OneSignal.Notifications.requestPermission();
   });
 </script>
     <style>
@@ -287,9 +288,10 @@
               }
               
               // Verified! Show Smart Action Button
-              if (window.OneSignalDeferred) {
-  OneSignalDeferred.push(function(OneSignal) {
-    OneSignal.login(empId);
+      if (window.OneSignalDeferred) {
+  window.OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.Notifications.requestPermission();
+    await OneSignal.login(empId);
   });
 }
               currentAction = res.nextAction;
