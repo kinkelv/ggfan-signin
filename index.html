@@ -7,7 +7,7 @@
     <title>GGFAN Employee Sign-In</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
- <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
@@ -16,8 +16,30 @@
       serviceWorkerParam: { scope: "/ggfan-signin/onesignal/" },
       serviceWorkerPath: "/ggfan-signin/OneSignalSDKWorker.js"
     });
-    await OneSignal.Notifications.requestPermission();
+
+    // Show the orange button if notifications are not yet enabled
+    if (!OneSignal.Notifications.permission) {
+      var pushBtn = document.getElementById('enablePushBtn');
+      if (pushBtn) pushBtn.style.display = 'block';
+    }
+
+    // Hide the button automatically once permission is granted
+    OneSignal.Notifications.addEventListener('permissionChange', function(granted) {
+      var pushBtn = document.getElementById('enablePushBtn');
+      if (pushBtn) pushBtn.style.display = granted ? 'none' : 'block';
+    });
   });
+
+  function enableNotifications() {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.Notifications.requestPermission();
+      var savedId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id');
+      if (savedId) {
+        await OneSignal.login(savedId);
+      }
+    });
+  }
 </script>
     <style>
       body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f4f7f6; margin: 0; }
@@ -58,7 +80,9 @@
     <div class="container">
       <!-- Appears automatically on Android/Chrome when app is installable -->
       <button id="installAppBtn" type="button" onclick="triggerInstall()">📲 Install Sign-In App</button>
-
+<button id="enablePushBtn" type="button" onclick="enableNotifications()" style="display:none; width:100%; padding:12px; margin-top:0; margin-bottom:15px; background-color:#e67e22; color:white; border:none; border-radius:8px; font-size:15px; font-weight:bold; cursor:pointer; box-sizing:border-box;">
+  🔔 Enable Push Notifications
+</button>
       <div class="header">
         <img class="logo" src="https://lh3.googleusercontent.com/d/1OB43QbbcZO0gyvtELXZf_qaNgP_1h5dr" alt="GGFAN Logo">
         <h2>Employee Sign-In</h2>
@@ -288,10 +312,9 @@
               }
               
               // Verified! Show Smart Action Button
-      if (window.OneSignalDeferred) {
-  window.OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.Notifications.requestPermission();
-    await OneSignal.login(empId);
+     if (window.OneSignalDeferred) {
+  window.OneSignalDeferred.push(function(OneSignal) {
+    OneSignal.login(empId);
   });
 }
               currentAction = res.nextAction;
