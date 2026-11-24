@@ -7,6 +7,17 @@
     <title>GGFAN Employee Sign-In</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "912d857b-e5a3-4267-bbcb-56bcf138cee2",
+      serviceWorkerParam: { scope: "/ggfan-signin/" },
+      serviceWorkerPath: "/ggfan-signin/OneSignalSDKWorker.js"
+    });
+  });
+</script>
     <style>
       body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f4f7f6; margin: 0; }
       .container { max-width: 400px; margin: 30px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); box-sizing: border-box; }
@@ -276,6 +287,11 @@
               }
               
               // Verified! Show Smart Action Button
+              if (window.OneSignalDeferred) {
+  OneSignalDeferred.push(function(OneSignal) {
+    OneSignal.login(empId);
+  });
+}
               currentAction = res.nextAction;
               statusInfo.style.color = "#11572C";
               statusInfo.innerText = getSmartGreeting(res.name, currentAction);
