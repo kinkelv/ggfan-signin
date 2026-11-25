@@ -470,16 +470,16 @@
               var firstName = res.name ? res.name.trim().split(' ')[0] : '';
 
               var now = new Date();
-              var isPast450Pm = (now.getHours() > 16) || (now.getHours() === 16 && now.getMinutes() >= 50);
-              if (currentAction === "Check Out") {
-                var fsAlert = document.getElementById('fullscreen-alert');
-                if (fsAlert && fsAlert.style.display === 'flex') {
-                  showFullScreenAlert(firstName);
-                } else if (isPast450Pm && !window.checkoutAlertShown) {
-                  window.checkoutAlertShown = true;
-                  showFullScreenAlert(firstName);
-                }
-              }
+var isPast501Pm = (now.getHours() > 17) || (now.getHours() === 17 && now.getMinutes() >= 1);
+if (currentAction === "Check Out") {
+  var fsAlert = document.getElementById('fullscreen-alert');
+  if (fsAlert && fsAlert.style.display === 'flex') {
+    showFullScreenAlert(firstName);
+  } else if (isPast501Pm && !window.checkoutAlertShown) {
+    window.checkoutAlertShown = true;
+    showFullScreenAlert(firstName);
+  }
+}
 
               statusInfo.style.color = "#11572C";
               statusInfo.innerText = getSmartGreeting(res.name, currentAction);
