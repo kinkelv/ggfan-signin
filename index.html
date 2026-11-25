@@ -217,8 +217,13 @@
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        const fsAlert = document.getElementById('fullscreen-alert');
+        const alertOpen = fsAlert && fsAlert.style.display === 'flex';
         const btn = document.getElementById('installAppBtn');
-        if (btn) btn.style.display = 'block';
+        if (btn && !isStandalone && !alertOpen) {
+          btn.style.display = 'block';
+        }
       });
 
       function triggerInstall() {
@@ -334,7 +339,11 @@
       }
 
       // 0F. Full-Screen Check-Out Takeover Helpers
-      function showFullScreenAlert(firstName) {
+     function showFullScreenAlert(firstName) {
+        var installBtn = document.getElementById('installAppBtn');
+        if (installBtn) {
+          installBtn.style.display = 'none';
+        }
         var fsAlert = document.getElementById('fullscreen-alert');
         var fsMsg = document.getElementById('fs-alert-msg');
         if (firstName && fsMsg) {
