@@ -76,6 +76,18 @@
       .notice-list li { margin-bottom: 4px; }
       .notice-list li:last-child { margin-bottom: 0; }
 
+      .notice-board { display: none; width: 100%; box-sizing: border-box; background-color: #fff8f8; border: 1px solid #f5c6cb; border-left: 5px solid #CC0000; border-radius: 8px; padding: 12px 14px; margin: 0 0 14px 0; text-align: left; }
+      .notice-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: #CC0000; margin-bottom: 6px; }
+      .notice-single { margin: 0; color: #1A1A1A; font-size: 14px; line-height: 1.45; }
+      .notice-list { margin: 0; padding-left: 18px; color: #1A1A1A; font-size: 14px; line-height: 1.45; }
+      .notice-list li { margin-bottom: 4px; }
+      .notice-list li:last-child { margin-bottom: 0; }
+
+      .quote-card { display: none; width: 100%; box-sizing: border-box; background-color: #f0f7f2; border: 1px solid #c3e6cb; border-left: 5px solid #11572C; border-radius: 8px; padding: 12px 14px; margin: 0 0 18px 0; text-align: left; }
+      .quote-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: #11572C; margin-bottom: 6px; }
+      .quote-text { margin: 0; color: #163822; font-size: 14px; font-style: italic; line-height: 1.45; }
+      .quote-author { margin-top: 6px; font-size: 12px; font-weight: bold; color: #11572C; text-align: right; }
+      
       #notif-gate { display: none; background-color: #fff8f8; border: 1px solid #f5c6cb; border-left: 5px solid #CC0000; border-radius: 8px; padding: 18px; margin-bottom: 15px; text-align: center; }
       #notif-gate-title { margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #CC0000; }
       #notif-gate-text { margin: 0 0 14px 0; font-size: 13px; color: #333; line-height: 1.45; }
@@ -152,8 +164,9 @@
         </div>
       </div>
 
-      <!-- Populated dynamically from Google Sheets via getNotices() -->
+     <!-- Populated dynamically from Google Sheets via getNotices() -->
       <div id="notice-board" class="notice-board"></div>
+      <div id="quote-card" class="quote-card"></div>
 
       <!-- Notification Gate: locks the sign-in form until notifications are enabled -->
       <div id="notif-gate">
@@ -331,23 +344,63 @@
         if (btn) btn.style.display = 'none';
       });
 
-      // 0D. Dynamic Noticeboard Loader
+      // 0D. Dynamic Noticeboard & Daily Quote Loader
       function renderNotices(notices) {
         var board = document.getElementById('notice-board');
+        var quoteCard = document.getElementById('quote-card');
         if (!notices || notices.length === 0) return;
 
-        var html = '<div class="notice-title">📌 Noticeboard</div>';
-        if (notices.length === 1) {
-          html += '<p class="notice-single">' + escapeHtml(notices[0]) + '</p>';
-        } else {
-          html += '<ul class="notice-list">';
-          for (var i = 0; i < notices.length; i++) {
-            html += '<li>' + escapeHtml(notices[i]) + '</li>';
+        var urgentNotices = [];
+        var dailyQuote = '';
+
+        for (var i = 0; i < notices.length; i++) {
+          var item = String(notices[i] || '').trim();
+          if (!item) continue;
+          if (item.indexOf('💡') === 0) {
+            dailyQuote = item.replace(/^💡\s*/, '').trim();
+          } else {
+            urgentNotices.push(item);
           }
-          html += '</ul>';
         }
-        board.innerHTML = html;
-        board.style.display = 'block';
+
+        // Render urgent red Noticeboard alerts (if any exist)
+        if (board) {
+          if (urgentNotices.length > 0) {
+            var html = '<div class="notice-title">📌 Noticeboard</div>';
+            if (urgentNotices.length === 1) {
+              html += '<p class="notice-single">' + escapeHtml(urgentNotices[0]) + '</p>';
+            } else {
+              html += '<ul class="notice-list">';
+              for (var j = 0; j < urgentNotices.length; j++) {
+                html += '<li>' + escapeHtml(urgentNotices[j]) + '</li>';
+              }
+              html += '</ul>';
+            }
+            board.innerHTML = html;
+            board.style.display = 'block';
+          } else {
+            board.style.display = 'none';
+          }
+        }
+
+        // Render dedicated green Quote of the Day card
+        if (quoteCard && dailyQuote) {
+          var quoteBody = dailyQuote;
+          var quoteAuthor = '';
+          var dashMatch = dailyQuote.match(/^(.*?)\s*[—–]\s*([^—–]+)$/);
+          if (dashMatch) {
+            quoteBody = dashMatch[1].trim();
+            quoteAuthor = dashMatch[2].trim();
+          }
+
+          var qHtml = '<div class="quote-title">💡 Quote of the Day</div>';
+          qHtml += '<p class="quote-text">“' + escapeHtml(quoteBody) + '”</p>';
+          if (quoteAuthor) {
+            qHtml += '<div class="quote-author">— ' + escapeHtml(quoteAuthor) + '</div>';
+          }
+          quoteCard.innerHTML = qHtml;
+          quoteCard.style.display = 'block';
+        }
       }
 
       function escapeHtml(text) {
