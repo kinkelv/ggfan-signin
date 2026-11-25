@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#11572C">
-    <title>GGFAN Employee Sign-In</title>
+    <title>Employee Sign-In</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
 
@@ -776,6 +776,7 @@
       }
 
       function closeAdminBoard() {
+        closeBulkPreview();
         document.getElementById('admin-panel').style.display = 'none';
         document.getElementById('formDiv').style.display = 'block';
         handleIdInput();
@@ -795,6 +796,7 @@
       }
 
       function refreshAdminBoard() {
+        closeBulkPreview();
         var adminId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id') || '';
         var token = localStorage.getItem('ggfan_device_token') || '';
         var listDiv = document.getElementById('admin-staff-list');
