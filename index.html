@@ -98,9 +98,9 @@
     <!-- 100% Full-Screen Check-Out Takeover Overlay -->
     <div id="fullscreen-alert" style="display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; background-color: #CC0000; color: #FFFFFF; z-index: 99999; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 28px; box-sizing: border-box;">
       <div style="font-size: 64px; margin-bottom: 12px;">⏰</div>
-      <h1 id="fs-alert-title" style="margin: 0 0 12px 0; font-size: 28px; line-height: 1.2;">4:50 PM Check-Out Reminder</h1>
+      <h1 id="fs-alert-title" style="margin: 0 0 12px 0; font-size: 28px; line-height: 1.2;">Check-Out Reminder</h1>
       <p id="fs-alert-msg" style="margin: 0 0 28px 0; font-size: 17px; line-height: 1.5; max-width: 340px;">
-        You are still signed in for today. Please record your <b>Check Out</b> before leaving the station.
+        You are still signed in for today. Please <b>check out</b> before leaving.
       </p>
       <button type="button" onclick="dismissFullScreenAlert()" style="width: 100%; max-width: 320px; padding: 16px; background-color: #FFFFFF; color: #CC0000; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
         Proceed to Check Out
@@ -345,7 +345,7 @@
         var fsAlert = document.getElementById('fullscreen-alert');
         var fsMsg = document.getElementById('fs-alert-msg');
         if (firstName && fsMsg) {
-          fsMsg.innerHTML = 'Hi <b>' + escapeHtml(firstName) + '</b>, you are still signed in for today. Please record your <b>Check Out</b> before leaving the station.';
+          fsMsg.innerHTML = 'Hi <b>' + escapeHtml(firstName) + '</b>, you are still signed in for today. Please <b>Check Out</b> before leaving.';
         }
         if (fsAlert) {
           fsAlert.style.display = 'flex';
