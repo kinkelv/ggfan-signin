@@ -21,7 +21,6 @@
             serviceWorkerPath: "/ggfan-signin/OneSignalSDKWorker.js"
           });
 
-          // If permission is already granted, ensure OneSignal opt-in & External ID login are synced
           if ('Notification' in window && Notification.permission === 'granted') {
             if (!OneSignal.User.PushSubscription.optedIn) {
               await OneSignal.User.PushSubscription.optIn();
@@ -34,7 +33,6 @@
 
           checkNotificationGate();
 
-          // Automatically hide gate & unlock form when permission turns on
           OneSignal.Notifications.addEventListener('permissionChange', async function(granted) {
             if (checkNotificationGate() && granted) {
               if (!OneSignal.User.PushSubscription.optedIn) {
@@ -110,7 +108,7 @@
     </div>
 
     <div class="container">
-      <!-- Appears automatically on Android/Chrome when app is installable -->
+      <!-- Appears only in browser tabs when app is installable -->
       <button id="installAppBtn" type="button" onclick="triggerInstall()">📲 Install Sign-In App</button>
 
       <div class="header">
@@ -339,7 +337,7 @@
       }
 
       // 0F. Full-Screen Check-Out Takeover Helpers
-     function showFullScreenAlert(firstName) {
+      function showFullScreenAlert(firstName) {
         var installBtn = document.getElementById('installAppBtn');
         if (installBtn) {
           installBtn.style.display = 'none';
@@ -370,4 +368,294 @@
         var timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
         var dateOptions = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
         document.getElementById('live-time').innerText = now.toLocaleTimeString('en-US', timeOptions);
-        document.getElementById
+        document.getElementById('live-date').innerText = now.toLocaleDateString('en-US', dateOptions);
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      function getSmartGreeting(fullName, action) {
+        var firstName = fullName.trim().split(' ')[0];
+        var hour = new Date().getHours();
+
+        if (action === "Check Out") {
+          if (hour < 12) return "Heading out, " + firstName + "? Have a great day!";
+          if (hour < 17) return "Wrapping up, " + firstName + "? Have a great afternoon!";
+          return "Have a restful evening, " + firstName + "!";
+        } else {
+          if (hour < 12) return "Good morning, " + firstName + "!";
+          if (hour < 17) return "Good afternoon, " + firstName + "!";
+          return "Good evening, " + firstName + "!";
+        }
+      }
+
+      // 2. Smart Action Button + Phone Lock Check
+      var typingTimer;
+      var currentAction = "";
+
+      window.addEventListener('load', function() {
+        google.script.run.withSuccessHandler(renderNotices).getNotices();
+
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('alert') === 'checkout') {
+          window.checkoutAlertShown = true;
+          showFullScreenAlert('');
+        }
+
+        if (checkNotificationGate()) {
+          var savedId = localStorage.getItem('ggfan_emp_id');
+          if (savedId) {
+            document.getElementById('empId').value = savedId;
+            handleIdInput();
+          }
+        }
+      });
+
+      function handleIdInput() {
+        clearTimeout(typingTimer);
+        var empId = document.getElementById('empId').value.trim();
+        var statusInfo = document.getElementById('status-info');
+        var btn = document.getElementById('btn');
+        var verifyBox = document.getElementById('verify-box');
+        var msg = document.getElementById('message');
+        
+        msg.innerText = "";
+        btn.style.display = "none";
+        verifyBox.style.display = "none";
+        document.getElementById('offSiteBox').style.display = "none";
+        document.getElementById('otp-section').style.display = "none";
+        document.getElementById('otp-msg').innerText = "";
+        currentAction = "";
+        
+        if (empId.length < 3) {
+          statusInfo.innerText = "";
+          return;
+        }
+        
+        statusInfo.style.color = "#666";
+        statusInfo.innerText = "Checking ID...";
+        var deviceToken = localStorage.getItem('ggfan_device_token') || "";
+        
+        typingTimer = setTimeout(function() {
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (document.getElementById('empId').value.trim() !== empId) return;
+              
+              if (!res || !res.found) {
+                statusInfo.style.color = "#CC0000";
+                statusInfo.innerText = "❌ Employee ID not found";
+                return;
+              }
+              
+              if (!res.verified) {
+                statusInfo.style.color = "#CC0000";
+                statusInfo.innerText = "🔒 Unverified Device";
+                document.getElementById('verify-text').innerText =
+                  "Hi " + res.name + ", verify your email (" + res.maskedEmail + ") once to link this phone to your ID.";
+                document.getElementById('send-otp-btn').disabled = false;
+                document.getElementById('send-otp-btn').innerText = "Send 6-Digit Code";
+                verifyBox.style.display = "block";
+                return;
+              }
+              
+              if (window.OneSignalDeferred) {
+                window.OneSignalDeferred.push(async function(OneSignal) {
+                  if (Notification.permission === 'granted' && !OneSignal.User.PushSubscription.optedIn) {
+                    await OneSignal.User.PushSubscription.optIn();
+                  }
+                  await OneSignal.login(empId);
+                });
+              }
+
+              currentAction = res.nextAction;
+              var firstName = res.name ? res.name.trim().split(' ')[0] : '';
+
+              var now = new Date();
+              var isPast450Pm = (now.getHours() > 16) || (now.getHours() === 16 && now.getMinutes() >= 50);
+              if (currentAction === "Check Out") {
+                var fsAlert = document.getElementById('fullscreen-alert');
+                if (fsAlert && fsAlert.style.display === 'flex') {
+                  showFullScreenAlert(firstName);
+                } else if (isPast450Pm && !window.checkoutAlertShown) {
+                  window.checkoutAlertShown = true;
+                  showFullScreenAlert(firstName);
+                }
+              }
+
+              statusInfo.style.color = "#11572C";
+              statusInfo.innerText = getSmartGreeting(res.name, currentAction);
+              
+              btn.innerText = currentAction;
+              btn.style.backgroundColor = (currentAction === "Check Out") ? "#CC0000" : "#11572C";
+              btn.disabled = false;
+              btn.style.display = "block";
+            })
+            .withFailureHandler(function(err) {
+              statusInfo.style.color = "#CC0000";
+              statusInfo.innerText = "⚠️ Error: " + err.message;
+            })
+            .getEmployeeStatus(empId, deviceToken);
+        }, 150);
+      }
+
+      // 3. Send & Verify 6-Digit Email Code
+      function requestOtp() {
+        var empId = document.getElementById('empId').value.trim();
+        var sendBtn = document.getElementById('send-otp-btn');
+        var otpMsg = document.getElementById('otp-msg');
+        
+        sendBtn.disabled = true;
+        sendBtn.innerText = "Sending...";
+        otpMsg.innerText = "";
+        
+        google.script.run
+          .withSuccessHandler(function(res) {
+            otpMsg.style.color = res.success ? "#11572C" : "#CC0000";
+            otpMsg.innerText = res.message;
+            if (res.success) {
+              document.getElementById('otp-section').style.display = "block";
+              sendBtn.innerText = "Resend Code";
+              sendBtn.disabled = false;
+            } else {
+              sendBtn.innerText = "Send 6-Digit Code";
+              sendBtn.disabled = false;
+            }
+          })
+          .withFailureHandler(function(err) {
+            otpMsg.style.color = "#CC0000";
+            otpMsg.innerText = "⚠️ Error: " + err.message;
+            sendBtn.innerText = "Send 6-Digit Code";
+            sendBtn.disabled = false;
+          })
+          .sendVerificationCode(empId);
+      }
+
+      function submitOtp() {
+        var empId = document.getElementById('empId').value.trim();
+        var code = document.getElementById('otpCode').value.trim();
+        var verifyBtn = document.getElementById('verify-otp-btn');
+        var otpMsg = document.getElementById('otp-msg');
+        
+        if (!code) {
+          otpMsg.style.color = "#CC0000";
+          otpMsg.innerText = "Please enter the 6-digit code.";
+          return;
+        }
+        
+        verifyBtn.disabled = true;
+        verifyBtn.innerText = "Verifying...";
+        
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res.success) {
+              localStorage.setItem('ggfan_device_token', res.token);
+              localStorage.setItem('ggfan_emp_id', empId);
+              document.getElementById('otpCode').value = "";
+              handleIdInput();
+            } else {
+              otpMsg.style.color = "#CC0000";
+              otpMsg.innerText = res.message;
+              verifyBtn.disabled = false;
+              verifyBtn.innerText = "Verify & Link Phone";
+            }
+          })
+          .withFailureHandler(function(err) {
+            otpMsg.style.color = "#CC0000";
+            otpMsg.innerText = "⚠️ Error: " + err.message;
+            verifyBtn.disabled = false;
+            verifyBtn.innerText = "Verify & Link Phone";
+          })
+          .verifyEmailCode(empId, code);
+      }
+
+      // 4. Form Submission with Geofencing & Device Token
+      function submitForm() {
+        if (!checkNotificationGate()) return;
+
+        var empId = document.getElementById('empId').value.trim();
+        var deviceToken = localStorage.getItem('ggfan_device_token') || "";
+        var msg = document.getElementById('message');
+        var btn = document.getElementById('btn');
+        
+        if (!empId || !currentAction) {
+          msg.innerText = "Please enter a valid National ID.";
+          msg.style.color = "red";
+          return;
+        }
+        
+        btn.disabled = true;
+        btn.innerText = "Verifying Location...";
+        msg.innerText = "";
+        
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            function(position) {
+              window.lastLat = position.coords.latitude;
+              window.lastLng = position.coords.longitude;
+              window.lastDeviceToken = deviceToken;
+              sendDataToBackend(empId, currentAction, position.coords.latitude, position.coords.longitude, deviceToken);
+            },
+            function(error) {
+              btn.disabled = false;
+              btn.innerText = currentAction;
+              msg.innerText = "❌ Error: You must allow Location Access to sign in.";
+              msg.style.color = "red";
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          );
+        } else {
+          msg.innerText = "❌ Error: GPS is not supported on this device.";
+          msg.style.color = "red";
+        }
+      }
+      
+      function sendDataToBackend(empId, action, lat, lon, deviceToken) {
+        google.script.run.withSuccessHandler(function(response) {
+          var msg = document.getElementById('message');
+          msg.innerText = response;
+          msg.style.color = response.includes('Success') ? "green" : "red";
+
+          var resText = String(response).toLowerCase();
+          var isGeofenceError = !response.includes('Success') && (
+            resText.includes("far") ||
+            resText.includes("outside") ||
+            resText.includes("range") ||
+            resText.includes("meters") ||
+            resText.includes("office")
+          );
+
+          if (isGeofenceError) {
+            document.getElementById('btn').style.display = "none";
+            document.getElementById('offSiteBox').style.display = "block";
+          } else {
+            document.getElementById('formDiv').style.display = "none";
+          }
+        }).processSignIn(empId, action, lat, lon, deviceToken);
+      }
+
+      function submitOffSiteRequest() {
+        var empId = document.getElementById('empId').value.trim();
+        var reason = document.getElementById('offSiteReason').value.trim();
+        var btn = document.getElementById('offSiteBtn');
+
+        if (!reason) {
+          alert("Please enter a brief reason for your off-site check-in.");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Sending Request...";
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            btn.disabled = false;
+            btn.innerText = "Request Off-Site Approval";
+            if (res.success) {
+              document.getElementById('offSiteBox').style.display = 'none';
+            }
+            alert(res.message);
+          })
+          .requestOffSiteCheckIn(empId, currentAction, window.lastLat, window.lastLng, reason, window.lastDeviceToken);
+      }
+    </script>
+  </body>
+</html>
