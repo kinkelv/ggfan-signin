@@ -384,16 +384,18 @@
         }
 
         // Render dedicated green Quote of the Day card
+        // Render dedicated green Quote of the Day card
         if (quoteCard && dailyQuote) {
           var quoteBody = dailyQuote;
           var quoteAuthor = '';
-          var dashMatch = dailyQuote.match(/^(.*?)\s*[—–]\s*([^—–]+)$/);
-          if (dashMatch) {
-            quoteBody = dashMatch[1].trim();
-            quoteAuthor = dashMatch[2].trim();
+          // Splits on " - ", " — ", " – ", "~", or "|" without breaking hyphenated words
+          var authorMatch = dailyQuote.match(/^(.*)(?:\s+-\s*|\s*[—–~|]\s*)(.+)$/);
+          if (authorMatch) {
+            quoteBody = authorMatch[1].trim();
+            quoteAuthor = authorMatch[2].trim();
           }
 
-          var qHtml = '<div class="quote-title">💡 Motivation:</div>';
+          var qHtml = '<div class="quote-title">💡 Motivation</div>';
           qHtml += '<p class="quote-text">“' + escapeHtml(quoteBody) + '”</p>';
           if (quoteAuthor) {
             qHtml += '<div class="quote-author">— ' + escapeHtml(quoteAuthor) + '</div>';
