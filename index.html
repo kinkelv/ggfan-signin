@@ -231,8 +231,7 @@
           </div>
         </div>
 
-        <input type="text" id="admin-search" placeholder="Search staff by name or department..." oninput="renderAdminStaffList()" style="padding:9px 10px; font-size:14px; margin-top:0;">
-        <input type="text" id="admin-nudge-note" placeholder="Optional custom nudge message (leave blank for auto)..." style="padding:9px 10px; font-size:13px; margin-top:6px;">
+        <input type="text" id="admin-nudge-note" placeholder="custom nudge (blank for auto)..." style="padding:9px 10px; font-size:13px; margin-top:6px;">
 
         <div class="bulk-row">
           <button type="button" id="bulk-out-btn" onclick="triggerBulkNudge('still_in')" style="background-color: #CC0000;">🔔 Not Out</button>
@@ -745,7 +744,7 @@
         var btn = document.getElementById('offSiteBtn');
 
         if (!reason) {
-          alert("Please enter a brief reason for your off-site check-in.");
+          alert("Please enter a brief reason.");
           return;
         }
 
@@ -826,17 +825,12 @@
       }
 
       function renderAdminStaffList() {
-        var listDiv = document.getElementById('admin-staff-list');
-        var query = (document.getElementById('admin-search').value || '').trim().toLowerCase();
+     var listDiv = document.getElementById('admin-staff-list');
 
-        var filtered = adminBoardData.filter(function(item) {
-          if (adminCurrentFilter !== 'all' && item.status !== adminCurrentFilter) return false;
-          if (query) {
-            var hay = (item.name + ' ' + item.department + ' ' + item.empId).toLowerCase();
-            if (hay.indexOf(query) === -1) return false;
-          }
-          return true;
-        });
+     var filtered = adminBoardData.filter(function(item) {
+       if (adminCurrentFilter !== 'all' && item.status !== adminCurrentFilter) return false;
+       return true;
+     });
 
         if (filtered.length === 0) {
           listDiv.innerHTML = '<p style="text-align:center; color:#666; font-size:13px; padding:16px 0;">No staff match this filter.</p>';
