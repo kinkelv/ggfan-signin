@@ -140,6 +140,14 @@
       #offSiteProcessingBox { display: none; margin-top: 15px; padding: 16px 14px; border: 1px solid #fde68a; border-left: 5px solid #d97706; background: #fffbeb; border-radius: 8px; text-align: center; }
       #offSiteProcessingText { margin: 0; font-size: 15px; font-weight: bold; color: #92400e; line-height: 1.45; }
       #offSiteProcessingSub { margin: 6px 0 0 0; font-size: 12px; color: #78350f; }
+      #pending-approvals-box { display: none; background-color: #fffbeb; border: 1px solid #fde68a; border-left: 5px solid #d97706; border-radius: 8px; padding: 12px; margin-bottom: 12px; text-align: left; }
+      #pending-approvals-title { font-size: 13px; font-weight: bold; color: #92400e; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.4px; }
+      .pending-item { background: #ffffff; border: 1px solid #f3e8c8; border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+      .pending-item:last-child { margin-bottom: 0; }
+      .pending-item-name { font-weight: bold; font-size: 14px; color: #0f172a; }
+      .pending-item-meta { font-size: 12px; color: #475569; margin: 3px 0 8px 0; line-height: 1.4; }
+      .pending-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .pending-actions button { margin-top: 0; padding: 8px; font-size: 12px; border-radius: 6px; }
     </style>
   </head>
   <body>
@@ -241,7 +249,11 @@
         </div>
 
         <div id="admin-toast"></div>
-
+<!-- Pending Off-Site Approvals Card (shows automatically when requests are waiting) -->
+        <div id="pending-approvals-box">
+          <div id="pending-approvals-title">⏳ Pending Off-Site Approvals</div>
+          <div id="pending-approvals-list"></div>
+        </div>
         <div class="stat-grid">
           <div class="stat-card" id="card-total" style="background:#f1f5f9;">
             <div class="stat-num" id="cnt-total">-</div>
@@ -1240,13 +1252,84 @@
 
             renderAdminStaffList(res);
             renderTempGeofenceStatus(res.tempGeofence);
+            renderPendingApprovals(res.pendingApprovals || []);
           })
           .withFailureHandler(function(err) {
             listDiv.innerHTML = '<p style="text-align:center; color:#CC0000; font-weight:bold;">⚠️ ' + escapeHtml(err && err.message ? err.message : String(err)) + '</p>';
           })
           .getLiveAttendanceBoard(adminId, token, currentAdminMode, cutoffVal);
       }
+function renderPendingApprovals(list) {
+        var box = document.getElementById('pending-approvals-box');
+        var titleEl = document.getElementById('pending-approvals-title');
+        var listEl = document.getElementById('pending-approvals-list');
+        if (!box || !listEl) return;
 
+        if (!list || list.length === 0) {
+          box.style.display = 'none';
+          listEl.innerHTML = '';
+          return;
+        }
+
+        if (titleEl) {
+          titleEl.innerText = '⏳ Pending Off-Site Approvals (' + list.length + ')';
+        }
+
+        var html = '';
+        for (var i = 0; i < list.length; i++) {
+          var item = list[i];
+          html += '<div class="pending-item">';
+          html += '  <div class="pending-item-name">' + escapeHtml(item.name) + ' <span style="font-size:11px; font-weight:normal; color:#64748b;">(' + escapeHtml(item.department || 'General') + ')</span></div>';
+          html += '  <div class="pending-item-meta"><b>' + escapeHtml(item.action) + '</b> at ' + escapeHtml(item.timeLabel) + ' · Reason: <b>' + escapeHtml(item.reason) + '</b></div>';
+          html += '  <div class="pending-actions">';
+          html += '    <button type="button" style="background-color:#11572C;" onclick="submitAdminOffSiteDecision(' + Number(item.rowIndex) + ', \'approve\', this)">✅ Approve</button>';
+          html += '    <button type="button" style="background-color:#CC0000;" onclick="submitAdminOffSiteDecision(' + Number(item.rowIndex) + ', \'deny\', this)">✖ Deny</button>';
+          html += '  </div>';
+          html += '</div>';
+        }
+
+        listEl.innerHTML = html;
+        box.style.display = 'block';
+      }
+
+      function submitAdminOffSiteDecision(rowIndex, decision, btnEl) {
+        var adminId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id') || '';
+        var token = localStorage.getItem('ggfan_device_token') || '';
+        var toast = document.getElementById('admin-toast');
+
+        if (btnEl && btnEl.parentNode) {
+          var siblings = btnEl.parentNode.querySelectorAll('button');
+          for (var i = 0; i < siblings.length; i++) {
+            siblings[i].disabled = true;
+          }
+          btnEl.innerText = (decision === 'approve') ? 'Approving...' : 'Denying...';
+        }
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              if (toast) {
+                toast.style.color = (decision === 'approve') ? '#11572C' : '#CC0000';
+                toast.innerText = res.message;
+              }
+              refreshAdminBoard();
+            } else {
+              if (toast) {
+                toast.style.color = '#CC0000';
+                toast.innerText = '⚠️ ' + ((res && res.message) || 'Could not process decision.');
+              }
+              refreshAdminBoard();
+            }
+          })
+          .withFailureHandler(function(err) {
+            if (toast) {
+              toast.style.color = '#CC0000';
+              toast.innerText = '⚠️ ' + (err && err.message ? err.message : err);
+            }
+            refreshAdminBoard();
+          })
+          .handleOffSiteDecision(adminId, token, rowIndex, decision);
+      }
       function renderAdminStaffList(res) {
         var listDiv = document.getElementById('admin-staff-list');
         if (!listDiv) return;
