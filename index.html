@@ -792,35 +792,83 @@
           msg.style.color = "red";
         }
       }
-      
-      function sendDataToBackend(empId, action, lat, lon, deviceToken) {
-        google.script.run.withSuccessHandler(function(response) {
-          var msg = document.getElementById('message');
-          msg.innerText = response;
-          msg.style.color = response.includes('Success') ? "green" : "red";
+      var autoResetTimer = null;
 
-          var resText = String(response).toLowerCase();
-          var isGeofenceError = !response.includes('Success') && (
-            resText.includes("far") ||
-            resText.includes("outside") ||
-            resText.includes("range") ||
-            resText.includes("meters") ||
-            resText.includes("office")
-          );
+      function resetSignInScreen() {
+        clearTimeout(autoResetTimer);
+        var msg = document.getElementById('message');
+        var formDiv = document.getElementById('formDiv');
+        var offSiteBox = document.getElementById('offSiteBox');
+        var offSiteReason = document.getElementById('offSiteReason');
+        var empInput = document.getElementById('empId');
 
-          if (isGeofenceError) {
-            document.getElementById('btn').style.display = "none";
-            document.getElementById('offSiteBox').style.display = "block";
+        if (msg) msg.innerText = "";
+        if (offSiteBox) offSiteBox.style.display = "none";
+        if (offSiteReason) offSiteReason.value = "";
+        if (formDiv && checkNotificationGate()) {
+          formDiv.style.display = "block";
+        }
+
+        var savedId = localStorage.getItem('ggfan_emp_id') || "";
+        if (empInput) {
+          empInput.value = savedId;
+          if (savedId) {
+            handleIdInput();
           } else {
-            document.getElementById('formDiv').style.display = "none";
+            document.getElementById('status-info').innerText = "";
+            document.getElementById('btn').style.display = "none";
+            var adminBtn = document.getElementById('admin-toggle-btn');
+            if (adminBtn) adminBtn.style.display = "none";
           }
-        }).processSignIn(empId, action, lat, lon, deviceToken);
+        }
+      }
+
+      function sendDataToBackend(empId, action, lat, lon, deviceToken) {
+        clearTimeout(autoResetTimer);
+        google.script.run
+          .withSuccessHandler(function(response) {
+            var msg = document.getElementById('message');
+            var isSuccess = String(response).includes('Success');
+            msg.innerText = response;
+            msg.style.color = isSuccess ? "green" : "red";
+
+            var resText = String(response).toLowerCase();
+            var isGeofenceError = !isSuccess && (
+              resText.includes("far") ||
+              resText.includes("outside") ||
+              resText.includes("range") ||
+              resText.includes("meters") ||
+              resText.includes("office")
+            );
+
+            if (isGeofenceError) {
+              document.getElementById('btn').style.display = "none";
+              document.getElementById('offSiteBox').style.display = "block";
+            } else {
+              document.getElementById('formDiv').style.display = "none";
+              autoResetTimer = setTimeout(resetSignInScreen, isSuccess ? 2500 : 3500);
+            }
+          })
+          .withFailureHandler(function(err) {
+            var btn = document.getElementById('btn');
+            var msg = document.getElementById('message');
+            if (btn) {
+              btn.disabled = false;
+              btn.innerText = currentAction || "Submit";
+            }
+            if (msg) {
+              msg.style.color = "red";
+              msg.innerText = "⚠️ Network error: " + (err && err.message ? err.message : "Please try again.");
+            }
+          })
+          .processSignIn(empId, action, lat, lon, deviceToken);
       }
 
       function submitOffSiteRequest() {
         var empId = document.getElementById('empId').value.trim();
         var reason = document.getElementById('offSiteReason').value.trim();
         var btn = document.getElementById('offSiteBtn');
+        var msg = document.getElementById('message');
 
         if (!reason) {
           alert("Please enter a brief reason.");
@@ -834,13 +882,26 @@
           .withSuccessHandler(function(res) {
             btn.disabled = false;
             btn.innerText = "Request Off-Site Approval";
-            if (res.success) {
+            if (res && res.success) {
               document.getElementById('offSiteBox').style.display = 'none';
+              document.getElementById('formDiv').style.display = 'none';
+              if (msg) {
+                msg.style.color = "green";
+                msg.innerText = "✅ " + res.message;
+              }
+              autoResetTimer = setTimeout(resetSignInScreen, 2500);
+            } else {
+              alert((res && res.message) || "Could not submit off-site request.");
             }
-            alert(res.message);
+          })
+          .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerText = "Request Off-Site Approval";
+            alert("⚠️ Error: " + (err && err.message ? err.message : err));
           })
           .requestOffSiteCheckIn(empId, currentAction, window.lastLat, window.lastLng, reason, window.lastDeviceToken);
       }
+      
 
       // 5. Live Admin "Who's In" View, Nudges & Temporary Geofence
       var adminBoardData = [];
