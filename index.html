@@ -69,13 +69,6 @@
       #live-time { font-size: 20px; font-weight: bold; color: #11572C; letter-spacing: 0.5px; }
       #live-date { font-size: 12px; color: #555; margin-top: 2px; }
 
-      .notice-board { display: none; width: 100%; box-sizing: border-box; background-color: #f0f7f2; border: 1px solid #d4e8db; border-left: 5px solid #CC0000; border-radius: 6px; padding: 12px 14px; margin: 0 0 18px 0; text-align: left; }
-      .notice-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: #CC0000; margin-bottom: 6px; }
-      .notice-single { margin: 0; color: #1A1A1A; font-size: 14px; line-height: 1.45; }
-      .notice-list { margin: 0; padding-left: 18px; color: #1A1A1A; font-size: 14px; line-height: 1.45; }
-      .notice-list li { margin-bottom: 4px; }
-      .notice-list li:last-child { margin-bottom: 0; }
-
       .notice-board { display: none; width: 100%; box-sizing: border-box; background-color: #fff8f8; border: 1px solid #f5c6cb; border-left: 5px solid #CC0000; border-radius: 8px; padding: 12px 14px; margin: 0 0 14px 0; text-align: left; }
       .notice-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: #CC0000; margin-bottom: 6px; }
       .notice-single { margin: 0; color: #1A1A1A; font-size: 14px; line-height: 1.45; }
@@ -129,7 +122,6 @@
       .b-out { background: #e2e8f0; color: #334155; }
       .nudge-btn { width: auto !important; margin-top: 0 !important; padding: 7px 10px !important; font-size: 12px !important; background-color: #CC0000 !important; border-radius: 6px !important; flex-shrink: 0; }
       #admin-toast { font-size: 13px; font-weight: bold; text-align: center; margin-bottom: 8px; min-height: 18px; }
-    #admin-toast { font-size: 13px; font-weight: bold; text-align: center; margin-bottom: 8px; min-height: 18px; }
       #bulk-preview-box { display: none; background-color: #fff8f8; border: 1px solid #f5c6cb; border-left: 5px solid #CC0000; border-radius: 8px; padding: 14px; margin-bottom: 12px; text-align: left; }
       #bulk-preview-title { font-size: 14px; font-weight: bold; color: #CC0000; margin: 0 0 8px 0; }
       #bulk-preview-list { margin: 0 0 12px 0; padding-left: 20px; max-height: 180px; overflow-y: auto; font-size: 13px; color: #1a1a1a; line-height: 1.55; }
@@ -137,12 +129,11 @@
       .preview-dept { color: #555; font-size: 12px; }
       .preview-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .preview-actions button { margin-top: 0; padding: 10px 8px; font-size: 13px; }
-      .temp-geo-box { background-color: #f0f7f2; border: 1px solid #c3e6cb; border-left: 5px solid #11572C; border-radius: 8px; padding: 12px; margin-bottom: 12px; text-align: left; }
+      .temp-geo-box { background-color: #f0f7f2; border: 1px solid #c3e6cb; border-left: 5px solid #11572C; border-radius: 8px; padding: 12px; margin: 10px 0 12px 0; text-align: left; }
       .temp-geo-title { font-size: 13px; font-weight: bold; color: #11572C; margin: 0 0 8px 0; }
       .temp-geo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
       .temp-geo-grid select, .temp-geo-box input { padding: 8px 10px; font-size: 13px; margin: 0; border-radius: 6px; border: 1px solid #cbd5e1; width: 100%; box-sizing: border-box; }
-      .temp-geo-active { background-color: #fffbeb; border: 1px solid #fde68a; border-left: 5px solid #d97706; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; text-align: left; font-size: 13px; color: #78350f; }
-    </style>
+      .temp-geo-active { background-color: #fffbeb; border: 1px solid #fde68a; border-left: 5px solid #d97706; border-radius: 8px; padding: 10px 12px; margin: 10px 0 12px 0; text-align: left; font-size: 13px; color: #78350f; }
     </style>
   </head>
   <body>
@@ -170,7 +161,7 @@
         </div>
       </div>
 
-     <!-- Populated dynamically from Google Sheets via getNotices() -->
+      <!-- Populated dynamically from Google Sheets via getNotices() -->
       <div id="notice-board" class="notice-board"></div>
       <div id="quote-card" class="quote-card"></div>
 
@@ -252,7 +243,7 @@
 
         <input type="text" id="admin-nudge-note" placeholder="custom nudge (blank for auto)..." style="padding:9px 10px; font-size:13px; margin-top:6px;">
         
-<!-- Active Temporary Geofence Banner -->
+        <!-- Active Temporary Geofence Banner -->
         <div id="temp-geo-active-banner" class="temp-geo-active" style="display:none;">
           <div id="temp-geo-active-text" style="font-weight:bold; margin-bottom:6px;"></div>
           <button type="button" onclick="deactivateTempGeofence()" style="background-color:#CC0000; padding:8px; font-size:12px; margin-top:0;">✖ End Temporary Geofence Now</button>
@@ -260,8 +251,8 @@
 
         <!-- Set Temporary Geofence Using Admin Phone GPS -->
         <div class="temp-geo-box">
-          <div class="temp-geo-title">📍 Temporary Geofence (Use My Phone Location)</div>
-          <input type="text" id="temp-geo-label" placeholder="Site name (e.g., Outreach Venue, Conference)...">
+          <div class="temp-geo-title">📍 Temp Geo (My Location)</div>
+          <input type="text" id="temp-geo-label" placeholder="Site name (e.g. Mission)">
           <div class="temp-geo-grid">
             <select id="temp-geo-radius">
               <option value="100">Radius: 100m</option>
@@ -276,9 +267,10 @@
               <option value="2">For 2 Hours</option>
             </select>
           </div>
-          <button type="button" id="set-temp-geo-btn" onclick="activateTempGeofenceHere()" style="background-color:#11572C; padding:10px; font-size:13px; margin-top:8px;">📍 Set Temp Geofence Here</button>
+          <button type="button" id="set-temp-geo-btn" onclick="activateTempGeofenceHere()" style="background-color:#11572C; padding:10px; font-size:13px; margin-top:8px;">📍 Set Temp Geo</button>
+          <div id="temp-geo-msg" style="font-size:12px; font-weight:bold; margin-top:6px;"></div>
         </div>
-        
+
         <div class="bulk-row">
           <button type="button" id="bulk-out-btn" onclick="triggerBulkNudge('still_in')" style="background-color: #CC0000;">🔔 Not Out</button>
           <button type="button" id="bulk-in-btn" onclick="triggerBulkNudge('not_in')" style="background-color: #d97706;">🔔 Not In</button>
@@ -416,7 +408,6 @@
           }
         }
 
-        // Render dedicated green Quote of the Day card
         // Render dedicated green Quote of the Day card
         if (quoteCard && dailyQuote) {
           var quoteBody = dailyQuote;
@@ -851,9 +842,10 @@
           .requestOffSiteCheckIn(empId, currentAction, window.lastLat, window.lastLng, reason, window.lastDeviceToken);
       }
 
-      // 5. Live Admin "Who's In" View & 1-Tap Push Nudge
+      // 5. Live Admin "Who's In" View, Nudges & Temporary Geofence
       var adminBoardData = [];
       var adminCurrentFilter = 'all';
+      var pendingBulkMode = '';
 
       function openAdminBoard() {
         document.getElementById('formDiv').style.display = 'none';
@@ -879,8 +871,7 @@
         if (activeMap[filterKey]) {
           document.getElementById(activeMap[filterKey]).classList.add('active');
         }
-       renderAdminStaffList();
-            renderTempGeofenceStatus(res.tempGeofence);
+        renderAdminStaffList();
       }
 
       function refreshAdminBoard() {
@@ -906,8 +897,170 @@
             document.getElementById('cnt-notin').innerText = res.counts.notIn;
             adminBoardData = res.staff || [];
             renderAdminStaffList();
-            
-         function renderTempGeofenceStatus(geo) {
+            renderTempGeofenceStatus(res.tempGeofence);
+          })
+          .withFailureHandler(function(err) {
+            listDiv.innerHTML = '<p style="text-align:center; color:#CC0000; font-weight:bold;">⚠️ ' + escapeHtml(err && err.message ? err.message : String(err)) + '</p>';
+          })
+          .getLiveAttendanceBoard(adminId, token);
+      }
+
+      function renderAdminStaffList() {
+        var listDiv = document.getElementById('admin-staff-list');
+        if (!listDiv) return;
+
+        var filtered = adminBoardData.filter(function(s) {
+          if (adminCurrentFilter === 'all') return true;
+          return s.status === adminCurrentFilter;
+        });
+
+        if (filtered.length === 0) {
+          listDiv.innerHTML = '<p style="text-align:center; color:#666; font-size:14px; padding:16px 0;">No staff in this category.</p>';
+          return;
+        }
+
+        var html = '';
+        for (var i = 0; i < filtered.length; i++) {
+          var s = filtered[i];
+          var badgeHtml = '<span class="badge b-notin">Not In</span>';
+          if (s.status === 'on_site') badgeHtml = '<span class="badge b-onsite">On-Site</span>';
+          else if (s.status === 'off_site') badgeHtml = '<span class="badge b-offsite">Off-Site</span>';
+          else if (s.status === 'checked_out') badgeHtml = '<span class="badge b-out">Out</span>';
+
+          var safeId = escapeHtml(s.empId);
+          var safeNameAttr = String(s.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+          html += '<div class="staff-row">';
+          html += '  <div class="staff-info">';
+          html += '    <div class="staff-name">' + escapeHtml(s.name) + '</div>';
+          html += '    <div class="staff-meta">' + badgeHtml + escapeHtml(s.note || '') + ' · ' + escapeHtml(s.department || 'General') + '</div>';
+          html += '  </div>';
+          if (s.status !== 'checked_out') {
+            html += '  <button type="button" class="nudge-btn" onclick="sendSingleNudge(\'' + safeId + '\', \'' + safeNameAttr + '\', this)">🔔 Nudge</button>';
+          }
+          html += '</div>';
+        }
+        listDiv.innerHTML = html;
+      }
+
+      function sendSingleNudge(targetEmpId, targetName, btnEl) {
+        var adminId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id') || '';
+        var token = localStorage.getItem('ggfan_device_token') || '';
+        var customNote = document.getElementById('admin-nudge-note').value.trim();
+        var toast = document.getElementById('admin-toast');
+
+        if (btnEl) {
+          btnEl.disabled = true;
+          btnEl.innerText = 'Sending...';
+        }
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (btnEl) {
+              btnEl.disabled = false;
+              btnEl.innerText = '🔔 Nudge';
+            }
+            toast.style.color = (res && res.success) ? '#11572C' : '#CC0000';
+            toast.innerText = (res && res.message) || ('Nudge sent to ' + targetName);
+          })
+          .withFailureHandler(function(err) {
+            if (btnEl) {
+              btnEl.disabled = false;
+              btnEl.innerText = '🔔 Nudge';
+            }
+            toast.style.color = '#CC0000';
+            toast.innerText = '⚠️ ' + (err && err.message ? err.message : err);
+          })
+          .sendAdminNudge(adminId, token, targetEmpId, customNote);
+      }
+
+      function triggerBulkNudge(mode) {
+        var toast = document.getElementById('admin-toast');
+        var previewBox = document.getElementById('bulk-preview-box');
+        var previewTitle = document.getElementById('bulk-preview-title');
+        var previewList = document.getElementById('bulk-preview-list');
+
+        var targets = adminBoardData.filter(function(s) {
+          if (mode === 'still_in') return (s.status === 'on_site' || s.status === 'off_site');
+          return s.status === 'not_in';
+        });
+
+        if (targets.length === 0) {
+          toast.style.color = '#11572C';
+          toast.innerText = '✅ No staff in this group need a reminder right now.';
+          return;
+        }
+
+        pendingBulkMode = mode;
+        previewTitle.innerText = (mode === 'still_in')
+          ? '🔔 Send Check-Out Reminder to ' + targets.length + ' Staff Still Checked In?'
+          : '🔔 Send Check-In Reminder to ' + targets.length + ' Staff Not Yet In?';
+
+        var itemsHtml = '';
+        for (var i = 0; i < targets.length; i++) {
+          itemsHtml += '<li><b>' + escapeHtml(targets[i].name) + '</b> <span class="preview-dept">(' + escapeHtml(targets[i].department || 'General') + ')</span></li>';
+        }
+        previewList.innerHTML = itemsHtml;
+        previewBox.style.display = 'block';
+      }
+
+      function closeBulkPreview() {
+        var previewBox = document.getElementById('bulk-preview-box');
+        if (previewBox) previewBox.style.display = 'none';
+        pendingBulkMode = '';
+      }
+
+      function confirmAndSendBulkNudge() {
+        if (!pendingBulkMode) return;
+        var mode = pendingBulkMode;
+        var adminId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id') || '';
+        var token = localStorage.getItem('ggfan_device_token') || '';
+        var customNote = document.getElementById('admin-nudge-note').value.trim();
+        var confirmBtn = document.getElementById('confirm-bulk-btn');
+        var toast = document.getElementById('admin-toast');
+
+        if (confirmBtn) {
+          confirmBtn.disabled = true;
+          confirmBtn.innerText = 'Sending...';
+        }
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (confirmBtn) {
+              confirmBtn.disabled = false;
+              confirmBtn.innerText = '✅ Confirm & Send';
+            }
+            closeBulkPreview();
+            toast.style.color = (res && res.success) ? '#11572C' : '#CC0000';
+            toast.innerText = (res && res.message) || 'Bulk reminder sent.';
+          })
+          .withFailureHandler(function(err) {
+            if (confirmBtn) {
+              confirmBtn.disabled = false;
+              confirmBtn.innerText = '✅ Confirm & Send';
+            }
+            closeBulkPreview();
+            toast.style.color = '#CC0000';
+            toast.innerText = '⚠️ ' + (err && err.message ? err.message : err);
+          })
+          .sendBulkNudge(adminId, token, mode, customNote);
+      }
+
+      function setTempGeoFeedback(msg, isError) {
+        var boxMsg = document.getElementById('temp-geo-msg');
+        var toast = document.getElementById('admin-toast');
+        var color = isError ? '#CC0000' : '#11572C';
+        if (boxMsg) {
+          boxMsg.style.color = color;
+          boxMsg.innerText = msg;
+        }
+        if (toast) {
+          toast.style.color = color;
+          toast.innerText = msg;
+        }
+      }
+
+      function renderTempGeofenceStatus(geo) {
         var banner = document.getElementById('temp-geo-active-banner');
         var textEl = document.getElementById('temp-geo-active-text');
         if (!banner || !textEl) return;
@@ -922,69 +1075,84 @@
 
       function activateTempGeofenceHere() {
         var btn = document.getElementById('set-temp-geo-btn');
-        var toast = document.getElementById('admin-toast');
-        var label = document.getElementById('temp-geo-label').value.trim();
-        var radius = document.getElementById('temp-geo-radius').value;
-        var duration = document.getElementById('temp-geo-duration').value;
+        var labelEl = document.getElementById('temp-geo-label');
+        var radiusEl = document.getElementById('temp-geo-radius');
+        var durationEl = document.getElementById('temp-geo-duration');
+
+        var label = labelEl ? labelEl.value.trim() : '';
+        var radius = radiusEl ? radiusEl.value : '200';
+        var duration = durationEl ? durationEl.value : '1';
 
         if (!navigator.geolocation) {
-          toast.style.color = '#CC0000';
-          toast.innerText = '⚠️ GPS is not supported on this browser.';
+          setTempGeoFeedback('⚠️ GPS is not supported on this browser.', true);
           return;
         }
 
-        btn.disabled = true;
-        btn.innerText = '📡 Locking phone GPS...';
-        toast.innerText = '';
+        if (btn) {
+          btn.disabled = true;
+          btn.innerText = '📡 Locking GPS...';
+        }
+        setTempGeoFeedback('Requesting GPS location...', false);
 
         navigator.geolocation.getCurrentPosition(
           function(pos) {
-            var adminId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id') || '';
+            var empInput = document.getElementById('empId');
+            var adminId = (empInput && empInput.value.trim()) || localStorage.getItem('ggfan_emp_id') || '';
             var token = localStorage.getItem('ggfan_device_token') || '';
 
-            btn.innerText = 'Saving zone...';
+            if (btn) btn.innerText = 'Saving zone...';
+            setTempGeoFeedback('GPS locked. Saving temporary zone...', false);
+
             google.script.run
               .withSuccessHandler(function(res) {
-                btn.disabled = false;
-                btn.innerText = '📍 Set Temp Geofence Here';
-                toast.style.color = res.success ? '#11572C' : '#CC0000';
-                toast.innerText = (res.success ? '✅ ' : '⚠️ ') + res.message;
-                if (res.success && res.geofence) {
-                  renderTempGeofenceStatus(res.geofence);
+                if (btn) {
+                  btn.disabled = false;
+                  btn.innerText = '📍 Set Temp Geo';
+                }
+                if (res && res.success) {
+                  setTempGeoFeedback('✅ ' + res.message, false);
+                  if (res.geofence) renderTempGeofenceStatus(res.geofence);
+                } else {
+                  setTempGeoFeedback('⚠️ ' + ((res && res.message) || 'Could not save geofence.'), true);
                 }
               })
               .withFailureHandler(function(err) {
-                btn.disabled = false;
-                btn.innerText = '📍 Set Temp Geofence Here';
-                toast.style.color = '#CC0000';
-                toast.innerText = '⚠️ ' + err.message;
+                if (btn) {
+                  btn.disabled = false;
+                  btn.innerText = '📍 Set Temp Geo';
+                }
+                setTempGeoFeedback('⚠️ ' + (err && err.message ? err.message : err), true);
               })
               .setTempGeofence(adminId, token, label, pos.coords.latitude, pos.coords.longitude, radius, duration);
           },
           function(geoErr) {
-            btn.disabled = false;
-            btn.innerText = '📍 Set Temp Geofence Here';
-            toast.style.color = '#CC0000';
-            toast.innerText = '⚠️ GPS error: ' + geoErr.message + ' (Ensure Location is ON).';
+            if (btn) {
+              btn.disabled = false;
+              btn.innerText = '📍 Set Temp Geo';
+            }
+            setTempGeoFeedback('⚠️ GPS error: ' + geoErr.message + ' (Turn Location ON and allow permission).', true);
           },
           { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
         );
       }
 
       function deactivateTempGeofence() {
-        var adminId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id') || '';
+        var empInput = document.getElementById('empId');
+        var adminId = (empInput && empInput.value.trim()) || localStorage.getItem('ggfan_emp_id') || '';
         var token = localStorage.getItem('ggfan_device_token') || '';
-        var toast = document.getElementById('admin-toast');
 
+        setTempGeoFeedback('Ending temporary geofence...', false);
         google.script.run
           .withSuccessHandler(function(res) {
-            toast.style.color = res.success ? '#11572C' : '#CC0000';
-            toast.innerText = (res.success ? '✅ ' : '⚠️ ') + res.message;
-            if (res.success) renderTempGeofenceStatus(null);
+            if (res && res.success) {
+              setTempGeoFeedback('✅ ' + res.message, false);
+              renderTempGeofenceStatus(null);
+            } else {
+              setTempGeoFeedback('⚠️ ' + ((res && res.message) || 'Could not clear geofence.'), true);
+            }
           })
           .withFailureHandler(function(err) {
-            toast.style.color = '#CC0000';
-            toast.innerText = '⚠️ ' + err.message;
+            setTempGeoFeedback('⚠️ ' + (err && err.message ? err.message : err), true);
           })
           .clearTempGeofence(adminId, token);
       }
