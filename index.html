@@ -227,6 +227,7 @@
         <div id="offSiteProcessingBox">
           <p id="offSiteProcessingText">⏳ Processing...</p>
           <p id="offSiteProcessingSub">Waiting for admin approval...</p>
+          <button type="button" onclick="resetSignInScreen()" style="width:auto; background:transparent; color:#92400e; text-decoration:underline; padding:4px 8px; font-size:12px; margin-top:8px;">Cancel Request</button>
           <button type="button" id="offSiteResetBtn" onclick="resetSignInScreen()" style="display:none; background-color:#64748b; padding:10px; font-size:13px; margin-top:12px;">← Back to Sign-In</button>
         </div>
       </div>
@@ -727,25 +728,24 @@
                   if (offRes && offRes.status === 'pending') {
                     saveLocalPendingOffSite(empId, offRes.action || currentAction, pendingLock ? pendingLock.submittedAt : 0);
                     btn.style.display = "none";
-                    showOffSiteProcessing(empId, deviceToken, 0, res.name);
-                  } else if (pendingLock) {
+                    showOffSiteProcessing(empId, deviceToken, pendingLock ? pendingLock.submittedAt : 0, res.name);
+                  } else if (offRes && offRes.status === 'approved') {
                     clearLocalPendingOffSite();
                     var procBox = document.getElementById('offSiteProcessingBox');
                     if (procBox) procBox.style.display = "none";
-
-                    if (offRes && offRes.status === 'denied') {
-                      showOffSiteDenied();
-                    } else {
-                      statusInfo.style.color = "#11572C";
-                      statusInfo.innerText = getSmartGreeting(res.name, currentAction);
-                      btn.innerText = currentAction;
-                      btn.style.backgroundColor = (currentAction === "Check Out") ? "#CC0000" : "#11572C";
-                      btn.disabled = false;
-                      btn.style.display = "block";
-                    }
+                    statusInfo.style.color = "#11572C";
+                    statusInfo.innerText = getSmartGreeting(res.name, currentAction);
+                    btn.innerText = currentAction;
+                    btn.style.backgroundColor = (currentAction === "Check Out") ? "#CC0000" : "#11572C";
+                    btn.disabled = false;
+                    btn.style.display = "block";
+                  } else if (offRes && offRes.status === 'denied') {
+                    clearLocalPendingOffSite();
+                    showOffSiteDenied();
                   }
+                  // If offRes.status === 'none' and pendingLock exists, keep "Processing..." active
                 })
-                .getOffSiteApprovalStatus(empId, deviceToken, 0);
+                .getOffSiteApprovalStatus(empId, deviceToken, pendingLock ? pendingLock.submittedAt : 0);
             })
             .withFailureHandler(function(err) {
               statusInfo.style.color = "#CC0000";
