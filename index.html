@@ -879,7 +879,8 @@
         if (activeMap[filterKey]) {
           document.getElementById(activeMap[filterKey]).classList.add('active');
         }
-        renderAdminStaffList();
+       renderAdminStaffList();
+            renderTempGeofenceStatus(res.tempGeofence);
       }
 
       function refreshAdminBoard() {
@@ -906,7 +907,7 @@
             adminBoardData = res.staff || [];
             renderAdminStaffList();
             
-            function renderTempGeofenceStatus(geo) {
+         function renderTempGeofenceStatus(geo) {
         var banner = document.getElementById('temp-geo-active-banner');
         var textEl = document.getElementById('temp-geo-active-text');
         if (!banner || !textEl) return;
@@ -986,158 +987,6 @@
             toast.innerText = '⚠️ ' + err.message;
           })
           .clearTempGeofence(adminId, token);
-      }
-          })
-          .withFailureHandler(function(err) {
-            listDiv.innerHTML = '<p style="text-align:center; color:#CC0000;">⚠️ ' + escapeHtml(err.message) + '</p>';
-          })
-          .getLiveAttendanceBoard(adminId, token);
-      }
-
-      function renderAdminStaffList() {
-     var listDiv = document.getElementById('admin-staff-list');
-
-     var filtered = adminBoardData.filter(function(item) {
-       if (adminCurrentFilter !== 'all' && item.status !== adminCurrentFilter) return false;
-       return true;
-     });
-
-        if (filtered.length === 0) {
-          listDiv.innerHTML = '<p style="text-align:center; color:#666; font-size:13px; padding:16px 0;">No staff match this filter.</p>';
-          return;
-        }
-
-        var html = '';
-        for (var i = 0; i < filtered.length; i++) {
-          var s = filtered[i];
-          var badgeHtml = '';
-          if (s.status === 'on_site') badgeHtml = '<span class="badge b-onsite">On-Site</span>';
-          else if (s.status === 'off_site') badgeHtml = '<span class="badge b-offsite">Off-Site</span>';
-          else if (s.status === 'checked_out') badgeHtml = '<span class="badge b-out">Checked Out</span>';
-          else badgeHtml = '<span class="badge b-notin">Not In</span>';
-
-          var showNudge = (s.status !== 'checked_out');
-          var nudgeBtnHtml = showNudge
-            ? '<button type="button" class="nudge-btn" id="nudge-' + escapeHtml(s.empId) + '" onclick="nudgeSingleStaff(\'' + escapeHtml(s.empId) + '\')">🔔 Nudge</button>'
-            : '<span style="font-size:11px; color:#155724; font-weight:bold;">✔ Done</span>';
-
-          html += '<div class="staff-row">' +
-                    '<div class="staff-info">' +
-                      '<div class="staff-name">' + escapeHtml(s.name) + '</div>' +
-                      '<div class="staff-meta">' + badgeHtml + escapeHtml(s.department) + ' • ' + escapeHtml(s.note) + '</div>' +
-                    '</div>' +
-                    nudgeBtnHtml +
-                  '</div>';
-        }
-        listDiv.innerHTML = html;
-      }
-
-      function nudgeSingleStaff(targetEmpId) {
-        var adminId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id') || '';
-        var token = localStorage.getItem('ggfan_device_token') || '';
-        var customNote = document.getElementById('admin-nudge-note').value.trim();
-        var toast = document.getElementById('admin-toast');
-        var btn = document.getElementById('nudge-' + targetEmpId);
-
-        if (btn) {
-          btn.disabled = true;
-          btn.innerText = 'Sending...';
-        }
-
-        google.script.run
-          .withSuccessHandler(function(res) {
-            toast.style.color = res.success ? '#11572C' : '#CC0000';
-            toast.innerText = (res.success ? '✅ ' : '⚠️ ') + res.message;
-            if (btn) {
-              btn.innerText = res.success ? '✅ Sent' : '🔔 Nudge';
-              btn.disabled = res.success;
-            }
-          })
-          .withFailureHandler(function(err) {
-            toast.style.color = '#CC0000';
-            toast.innerText = '⚠️ ' + err.message;
-            if (btn) {
-              btn.disabled = false;
-              btn.innerText = '🔔 Nudge';
-            }
-          })
-          .sendAdminNudge(adminId, token, targetEmpId, customNote);
-      }
-var pendingBulkGroupType = '';
-
-      function triggerBulkNudge(groupType) {
-        var toast = document.getElementById('admin-toast');
-        var previewBox = document.getElementById('bulk-preview-box');
-        var previewTitle = document.getElementById('bulk-preview-title');
-        var previewList = document.getElementById('bulk-preview-list');
-        var confirmBtn = document.getElementById('confirm-bulk-btn');
-
-        toast.innerText = '';
-
-        var recipients = adminBoardData.filter(function(s) {
-          if (groupType === 'still_in') return (s.status === 'on_site' || s.status === 'off_site');
-          if (groupType === 'not_in') return (s.status === 'not_in');
-          return false;
-        });
-
-        if (recipients.length === 0) {
-          previewBox.style.display = 'none';
-          toast.style.color = '#CC0000';
-          toast.innerText = '⚠️ No employees in that group right now.';
-          return;
-        }
-
-        pendingBulkGroupType = groupType;
-        var groupLabel = (groupType === 'not_in') ? 'Not Signed In Yet' : 'Still Signed In';
-        previewTitle.innerText = '📋 ' + recipients.length + ' Staff Will Be Nudged (' + groupLabel + '):';
-
-        var listHtml = '';
-        for (var i = 0; i < recipients.length; i++) {
-          var r = recipients[i];
-          var statusTag = (r.status === 'off_site') ? ' [Off-Site]' : '';
-          listHtml += '<li><b>' + escapeHtml(r.name) + '</b> <span class="preview-dept">— ' + escapeHtml(r.department) + statusTag + '</span></li>';
-        }
-        previewList.innerHTML = listHtml;
-
-        confirmBtn.disabled = false;
-        confirmBtn.innerText = '✅ Confirm & Send (' + recipients.length + ')';
-        previewBox.style.display = 'block';
-      }
-
-      function closeBulkPreview() {
-        pendingBulkGroupType = '';
-        var previewBox = document.getElementById('bulk-preview-box');
-        if (previewBox) previewBox.style.display = 'none';
-      }
-
-      function confirmAndSendBulkNudge() {
-        if (!pendingBulkGroupType) return;
-
-        var groupType = pendingBulkGroupType;
-        var adminId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id') || '';
-        var token = localStorage.getItem('ggfan_device_token') || '';
-        var customNote = document.getElementById('admin-nudge-note').value.trim();
-        var toast = document.getElementById('admin-toast');
-        var confirmBtn = document.getElementById('confirm-bulk-btn');
-
-        confirmBtn.disabled = true;
-        confirmBtn.innerText = 'Sending...';
-        toast.style.color = '#555';
-        toast.innerText = 'Sending push notifications...';
-
-        google.script.run
-          .withSuccessHandler(function(res) {
-            closeBulkPreview();
-            toast.style.color = res.success ? '#11572C' : '#CC0000';
-            toast.innerText = (res.success ? '✅ ' : '⚠️ ') + res.message;
-          })
-          .withFailureHandler(function(err) {
-            confirmBtn.disabled = false;
-            confirmBtn.innerText = '✅ Send';
-            toast.style.color = '#CC0000';
-            toast.innerText = '⚠️ ' + err.message;
-          })
-          .sendBulkNudge(adminId, token, groupType, customNote);
       }
     </script>
   </body>
