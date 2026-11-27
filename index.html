@@ -58,40 +58,40 @@
 
     <style>
       body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 16px; background-color: #f4f7f6; margin: 0; }
-      .container { max-width: 440px; margin: 20px auto; background: white; padding: 24px; border-: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); box-sizing: border-box; }
+      .container { max-width: 440px; margin: 20px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); box-sizing: border-box; }
       
-      #installAppBtn { display: none; width: 100%; padding: 12px; margin-top: 0; margin-bottom: 18px; background-color: #0d6efd; color: white; border: none; border-: 8px; font-size: 15px; font-weight: bold; cursor: pointer; box-sizing: border-box; }
+      #installAppBtn { display: none; width: 100%; padding: 12px; margin-top: 0; margin-bottom: 18px; background-color: #0d6efd; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; box-sizing: border-box; }
 
       .header { text-align: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #eaeaea; }
       .logo { max-width: 120px; height: auto; margin-bottom: 8px; }
       h2 { color: #11572C; margin: 4px 0 8px 0; font-size: 22px; }
-      .clock-box { background-color: #f0f7f2; border: 1px solid #d4e8db; border-: 8px; padding: 8px 12px; display: inline-block; margin-top: 4px; }
+      .clock-box { background-color: #f0f7f2; border: 1px solid #d4e8db; border-radius: 8px; padding: 8px 12px; display: inline-block; margin-top: 4px; }
       #live-time { font-size: 20px; font-weight: bold; color: #11572C; letter-spacing: 0.5px; }
       #live-date { font-size: 12px; color: #555; margin-top: 2px; }
 
-      .notice-board { display: none; width: 100%; box-sizing: border-box; background-color: #fff8f8; border: 1px solid #f5c6cb; border-left: 5px solid #CC0000; border-: 8px; padding: 12px 14px; margin: 0 0 14px 0; text-align: left; }
+      .notice-board { display: none; width: 100%; box-sizing: border-box; background-color: #fff8f8; border: 1px solid #f5c6cb; border-left: 5px solid #CC0000; border-radius: 8px; padding: 12px 14px; margin: 0 0 14px 0; text-align: left; }
       .notice-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: #CC0000; margin-bottom: 6px; }
       .notice-single { margin: 0; color: #1A1A1A; font-size: 14px; line-height: 1.45; }
       .notice-list { margin: 0; padding-left: 18px; color: #1A1A1A; font-size: 14px; line-height: 1.45; }
       .notice-list li { margin-bottom: 4px; }
       .notice-list li:last-child { margin-bottom: 0; }
 
-      .quote-card { display: none; width: 100%; box-sizing: border-box; background-color: #f0f7f2; border: 1px solid #c3e6cb; border-left: 5px solid #11572C; border-: 8px; padding: 12px 14px; margin: 0 0 18px 0; text-align: left; }
+      .quote-card { display: none; width: 100%; box-sizing: border-box; background-color: #f0f7f2; border: 1px solid #c3e6cb; border-left: 5px solid #11572C; border-radius: 8px; padding: 12px 14px; margin: 0 0 18px 0; text-align: left; }
       .quote-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: #11572C; margin-bottom: 6px; }
       .quote-text { margin: 0; color: #163822; font-size: 14px; font-style: italic; line-height: 1.45; }
       .quote-author { margin-top: 6px; font-size: 12px; font-weight: bold; color: #11572C; text-align: right; }
       
-      #notif-gate { display: none; background-color: #fff8f8; border: 1px solid #f5c6cb; border-left: 5px solid #CC0000; border-: 8px; padding: 18px; margin-bottom: 15px; text-align: center; }
+      #notif-gate { display: none; background-color: #fff8f8; border: 1px solid #f5c6cb; border-left: 5px solid #CC0000; border-radius: 8px; padding: 18px; margin-bottom: 15px; text-align: center; }
       #notif-gate-title { margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #CC0000; }
       #notif-gate-text { margin: 0 0 14px 0; font-size: 13px; color: #333; line-height: 1.45; }
 
       label { font-weight: bold; color: #333; display: block; margin-top: 12px; font-size: 14px; }
-      input { width: 100%; padding: 12px; margin-top: 5px; border-: 6px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
-      button { width: 100%; padding: 14px; margin-top: 14px; background-color: #11572C; color: white; border: none; border-: 6px; font-size: 16px; cursor: pointer; font-weight: bold; box-sizing: border-box; }
+      input { width: 100%; padding: 12px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
+      button { width: 100%; padding: 14px; margin-top: 14px; background-color: #11572C; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; box-sizing: border-box; }
       button:hover { opacity: 0.92; }
       button:disabled { background-color: #88a894 !important; cursor: not-allowed; }
 
-      #verify-box { display: none; background-color: #fff8f8; border: 1px solid #f5c6cb; border-: 8px; padding: 14px; margin-top: 15px; text-align: center; }
+      #verify-box { display: none; background-color: #fff8f8; border: 1px solid #f5c6cb; border-radius: 8px; padding: 14px; margin-top: 15px; text-align: center; }
       #verify-text { font-size: 13px; color: #333; margin: 0 0 10px 0; line-height: 1.4; }
       #otp-section { display: none; margin-top: 10px; }
       #otp-msg { font-size: 13px; font-weight: bold; margin-top: 8px; }
@@ -102,9 +102,9 @@
       /* Live Admin "Who's In" Dashboard Styles */
       #admin-panel { display: none; }
       .admin-topbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
-      .admin-topbar button { width: auto; margin-top: 0; padding: 8px 12px; font-size: 13px; border-: 6px; }
+      .admin-topbar button { width: auto; margin-top: 0; padding: 8px 12px; font-size: 13px; border-radius: 6px; }
       .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
-      .stat-card { padding: 8px 4px; border-: 8px; text-align: center; cursor: pointer; border: 2px solid transparent; background: #f8f9fa; }
+      .stat-card { padding: 8px 4px; border-radius: 8px; text-align: center; cursor: pointer; border: 2px solid transparent; background: #f8f9fa; }
       .stat-card.active { border-color: #11572C; }
       .stat-num { font-size: 18px; font-weight: bold; line-height: 1.1; }
       .stat-lbl { font-size: 11px; color: #444; margin-top: 2px; }
@@ -134,7 +134,7 @@
       .temp-geo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
       .temp-geo-grid select, .temp-geo-box input { padding: 8px 10px; font-size: 13px; margin: 0; border-radius: 6px; border: 1px solid #cbd5e1; width: 100%; box-sizing: border-box; }
       .temp-geo-active { background-color: #fffbeb; border: 1px solid #fde68a; border-left: 5px solid #d97706; border-radius: 8px; padding: 10px 12px; margin: 10px 0 12px 0; text-align: left; font-size: 13px; color: #78350f; }
-    .reason-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+      .reason-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
       .reason-chip { width: auto; padding: 5px 10px; margin-top: 0; font-size: 12px; font-weight: 600; background-color: #ffffff; color: #8a6d3b; border: 1px solid #f0ad4e; border-radius: 16px; }
       .reason-chip:hover { background-color: #fef3c7; opacity: 1; }
       #offSiteProcessingBox { display: none; margin-top: 15px; padding: 16px 14px; border: 1px solid #fde68a; border-left: 5px solid #d97706; background: #fffbeb; border-radius: 8px; text-align: center; }
@@ -212,11 +212,11 @@
             <b>Away From the Office:</b> In the farm, Attending a Meeting or on an Errand?
           </p>
           <div class="reason-chips">
-            <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Farm Visit'">Bank</button>
-            <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Bank / Town Errand'">Shopping</button>
-            <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Field Outreach'">Training</button>
+            <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Bank'">Bank</button>
+            <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Shopping'">Shopping</button>
+            <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Training'">Training</button>
             <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Meeting'">Meeting</button>
-            <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Training'">Personal</button>
+            <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Personal'">Personal</button>
           </div>
           <input type="text" id="offSiteReason" placeholder="Enter brief reason (e.g., Bank, Training or Meeting)" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box; border:1px solid #ccc; border-radius:6px;">
           <button type="button" id="offSiteBtn" onclick="submitOffSiteRequest()" style="width:100%; padding:10px; background:#e67e22; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-top:0;">
@@ -242,19 +242,19 @@
         <div id="admin-toast"></div>
 
         <div class="stat-grid">
-          <div class="stat-card active" id="filter-all" onclick="setAdminFilter('all')" style="background:#f1f5f9;">
+          <div class="stat-card" id="card-total" style="background:#f1f5f9;">
             <div class="stat-num" id="cnt-total">-</div>
-            <div class="stat-lbl">All</div>
+            <div class="stat-lbl">Total</div>
           </div>
-          <div class="stat-card" id="filter-onsite" onclick="setAdminFilter('on_site')" style="background:#eaf7ed;">
+          <div class="stat-card" id="card-onsite" onclick="setAdminFilterMode('not_out')" style="background:#eaf7ed;">
             <div class="stat-num" id="cnt-onsite" style="color:#155724;">-</div>
             <div class="stat-lbl">🟢 On-Site</div>
           </div>
-          <div class="stat-card" id="filter-offsite" onclick="setAdminFilter('off_site')" style="background:#fff9e6;">
+          <div class="stat-card" id="card-offsite" onclick="setAdminFilterMode('not_out')" style="background:#fff9e6;">
             <div class="stat-num" id="cnt-offsite" style="color:#856404;">-</div>
             <div class="stat-lbl">🟡 Off-Site</div>
           </div>
-          <div class="stat-card" id="filter-notin" onclick="setAdminFilter('not_in')" style="background:#fdf0f0;">
+          <div class="stat-card" id="card-notin" onclick="setAdminFilterMode('not_in')" style="background:#fdf0f0;">
             <div class="stat-num" id="cnt-notin" style="color:#721c24;">-</div>
             <div class="stat-lbl">🔴 Not In</div>
           </div>
@@ -305,6 +305,24 @@
           </div>
         </div>
 
+        <!-- Strict Filter Bar: Shows ONLY Not Checked In OR Not Checked Out as of set time -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; margin-bottom:10px;">
+          <div style="display:flex; gap:6px; margin-bottom:8px;">
+            <button type="button" id="mode-not-in-btn" onclick="setAdminFilterMode('not_in')" style="flex:1; padding:8px; font-size:12px; font-weight:bold; border-radius:6px; border:1px solid #cbd5e1; background:#CC0000; color:#fff; margin-top:0;">
+              🔴 Not In
+            </button>
+            <button type="button" id="mode-not-out-btn" onclick="setAdminFilterMode('not_out')" style="flex:1; padding:8px; font-size:12px; font-weight:bold; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#334155; margin-top:0;">
+              🟠 Not Out
+            </button>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <label for="admin-cutoff-time" style="font-size:12px; font-weight:bold; color:#334155; margin-top:0; white-space:nowrap;">As of Time:</label>
+            <input type="time" id="admin-cutoff-time" onchange="onAdminCutoffChange()" style="padding:6px 8px; margin-top:0; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; font-weight:bold; color:#0f172a;">
+            <button type="button" onclick="refreshAdminBoard()" style="width:auto; padding:6px 10px; font-size:12px; background:#0f172a; color:#fff; border-radius:6px; margin-top:0; white-space:nowrap;">↻ Apply</button>
+          </div>
+          <div id="admin-filter-caption" style="font-size:11px; color:#475569; margin-top:6px; font-weight:600; text-align:left;"></div>
+        </div>
+        
         <div id="admin-staff-list" class="staff-list">
           <p style="text-align:center; color:#666; font-size:14px;">Loading live attendance...</p>
         </div>
@@ -407,7 +425,6 @@
           }
         }
 
-        // Render urgent red Noticeboard alerts (if any exist)
         if (board) {
           if (urgentNotices.length > 0) {
             var html = '<div class="notice-title">📌 Noticeboard</div>';
@@ -427,11 +444,9 @@
           }
         }
 
-        // Render dedicated green Quote of the Day card
         if (quoteCard && dailyQuote) {
           var quoteBody = dailyQuote;
           var quoteAuthor = '';
-          // Splits on " - ", " — ", " – ", "~", or "|" without breaking hyphenated words
           var authorMatch = dailyQuote.match(/^(.*)(?:\s+-\s*|\s*[—–~|]\s*)(.+)$/);
           if (authorMatch) {
             quoteBody = authorMatch[1].trim();
@@ -606,7 +621,7 @@
         }
       });
 
-   function handleIdInput() {
+      function handleIdInput() {
         clearTimeout(typingTimer);
         if (typeof stopOffSitePolling === 'function') {
           stopOffSitePolling();
@@ -673,7 +688,6 @@
               currentAction = res.nextAction;
               var firstName = res.name ? res.name.trim().split(' ')[0] : '';
 
-              // Trigger 2: Auto-show full-screen takeover if still checked in at or after 5:01 PM
               var now = new Date();
               var isPast501Pm = (now.getHours() > 17) || (now.getHours() === 17 && now.getMinutes() >= 1);
               if (currentAction === "Check Out") {
@@ -694,12 +708,10 @@
               btn.disabled = false;
               btn.style.display = "block";
 
-              // Show Live Admin Board toggle if this verified ID is an Admin
               if (adminBtn && (ADMIN_IDS.indexOf(empId) !== -1 || res.isAdmin)) {
                 adminBtn.style.display = "block";
               }
 
-              // Resume "Processing..." screen automatically if an off-site request is still pending today
               google.script.run
                 .withSuccessHandler(function(offRes) {
                   if (document.getElementById('empId').value.trim() !== empId) return;
@@ -828,6 +840,7 @@
           msg.style.color = "red";
         }
       }
+
       var autoResetTimer = null;
 
       function resetSignInScreen() {
@@ -900,7 +913,7 @@
           .processSignIn(empId, action, lat, lon, deviceToken);
       }
 
-   var offSitePollTimer = null;
+      var offSitePollTimer = null;
 
       function stopOffSitePolling() {
         if (offSitePollTimer) {
@@ -952,7 +965,6 @@
                   msg.innerText = label;
                 }
 
-                // Show "Check-in approved" for 2.5 seconds, then switch button to the next action
                 autoResetTimer = setTimeout(function() {
                   if (msg) msg.innerText = '';
                   var btn = document.getElementById('btn');
@@ -1015,7 +1027,7 @@
             if (res && res.success) {
               document.getElementById('offSiteBox').style.display = 'none';
               document.getElementById('offSiteReason').value = '';
-              showOffSiteProcessing(empId, deviceToken, submittedAtMs, '');
+              showOffSiteProcessing(empId, deviceToken, submittedAtMs, window.lastVerifiedEmpName || '');
             } else {
               alert((res && res.message) || "Could not submit off-site request.");
             }
@@ -1027,18 +1039,82 @@
           })
           .requestOffSiteCheckIn(empId, currentAction, window.lastLat, window.lastLng, reason, deviceToken);
       }
-      
 
-      // 5. Live Admin "Who's In" View, Nudges & Temporary Geofence
+      // 5. Live Admin "Who's In" View (Strict Not In / Not Out + Cutoff Time), Nudges & Temp Geo
       var adminBoardData = [];
-      var adminCurrentFilter = 'all';
-     var pendingBulkMode = '';
+      var currentAdminMode = localStorage.getItem('ggfan_admin_mode') || (new Date().getHours() >= 12 ? 'not_out' : 'not_in');
+      if (currentAdminMode === 'not_checked_in') currentAdminMode = 'not_in';
+      if (currentAdminMode === 'not_checked_out') currentAdminMode = 'not_out';
+
+      var pendingBulkMode = '';
       var nudgedStaffIds = {};
+
+      function getSavedCutoffForMode(mode) {
+        if (mode === 'not_out') {
+          return localStorage.getItem('ggfan_cutoff_out') || '17:00';
+        }
+        return localStorage.getItem('ggfan_cutoff_in') || '08:00';
+      }
+
+      function updateAdminModeButtons() {
+        var inBtn = document.getElementById('mode-not-in-btn');
+        var outBtn = document.getElementById('mode-not-out-btn');
+        var cardNotIn = document.getElementById('card-notin');
+        var cardOnSite = document.getElementById('card-onsite');
+        var cardOffSite = document.getElementById('card-offsite');
+
+        if (cardNotIn) cardNotIn.classList.toggle('active', currentAdminMode === 'not_in');
+        if (cardOnSite) cardOnSite.classList.toggle('active', currentAdminMode === 'not_out');
+        if (cardOffSite) cardOffSite.classList.toggle('active', currentAdminMode === 'not_out');
+
+        if (!inBtn || !outBtn) return;
+        if (currentAdminMode === 'not_in') {
+          inBtn.style.background = '#CC0000';
+          inBtn.style.color = '#fff';
+          outBtn.style.background = '#fff';
+          outBtn.style.color = '#334155';
+        } else {
+          outBtn.style.background = '#d97706';
+          outBtn.style.color = '#fff';
+          inBtn.style.background = '#fff';
+          inBtn.style.color = '#334155';
+        }
+      }
+
+      function setAdminFilterMode(mode) {
+        if (mode === 'not_checked_in') mode = 'not_in';
+        if (mode === 'not_checked_out') mode = 'not_out';
+        currentAdminMode = mode;
+        localStorage.setItem('ggfan_admin_mode', mode);
+
+        var timeInput = document.getElementById('admin-cutoff-time');
+        if (timeInput) {
+          timeInput.value = getSavedCutoffForMode(mode);
+        }
+        updateAdminModeButtons();
+        refreshAdminBoard();
+      }
+
+      function onAdminCutoffChange() {
+        var timeInput = document.getElementById('admin-cutoff-time');
+        if (!timeInput || !timeInput.value) return;
+        if (currentAdminMode === 'not_out') {
+          localStorage.setItem('ggfan_cutoff_out', timeInput.value);
+        } else {
+          localStorage.setItem('ggfan_cutoff_in', timeInput.value);
+        }
+        refreshAdminBoard();
+      }
 
       function openAdminBoard() {
         document.getElementById('formDiv').style.display = 'none';
         document.getElementById('message').innerText = '';
         document.getElementById('admin-panel').style.display = 'block';
+        var timeInput = document.getElementById('admin-cutoff-time');
+        if (timeInput) {
+          timeInput.value = getSavedCutoffForMode(currentAdminMode);
+        }
+        updateAdminModeButtons();
         refreshAdminBoard();
       }
 
@@ -1049,19 +1125,6 @@
         handleIdInput();
       }
 
-      function setAdminFilter(filterKey) {
-        adminCurrentFilter = filterKey;
-        var ids = ['filter-all', 'filter-onsite', 'filter-offsite', 'filter-notin'];
-        for (var i = 0; i < ids.length; i++) {
-          document.getElementById(ids[i]).classList.remove('active');
-        }
-        var activeMap = { all: 'filter-all', on_site: 'filter-onsite', off_site: 'filter-offsite', not_in: 'filter-notin' };
-        if (activeMap[filterKey]) {
-          document.getElementById(activeMap[filterKey]).classList.add('active');
-        }
-        renderAdminStaffList();
-      }
-
       function refreshAdminBoard() {
         closeBulkPreview();
         nudgedStaffIds = {};
@@ -1069,9 +1132,17 @@
         var token = localStorage.getItem('ggfan_device_token') || '';
         var listDiv = document.getElementById('admin-staff-list');
         var toast = document.getElementById('admin-toast');
+        var captionEl = document.getElementById('admin-filter-caption');
+        var timeInput = document.getElementById('admin-cutoff-time');
+
+        if (timeInput && !timeInput.value) {
+          timeInput.value = getSavedCutoffForMode(currentAdminMode);
+        }
+        updateAdminModeButtons();
+        var cutoffVal = timeInput ? timeInput.value : getSavedCutoffForMode(currentAdminMode);
 
         toast.innerText = '';
-        listDiv.innerHTML = '<p style="text-align:center; color:#666; font-size:14px;">Refreshing live attendance...</p>';
+        listDiv.innerHTML = '<p style="text-align:center; color:#666; font-size:14px;">Loading filtered attendance...</p>';
 
         google.script.run
           .withSuccessHandler(function(res) {
@@ -1084,33 +1155,45 @@
             document.getElementById('cnt-onsite').innerText = res.counts.onSite;
             document.getElementById('cnt-offsite').innerText = res.counts.offSite;
             document.getElementById('cnt-notin').innerText = res.counts.notIn;
+
             adminBoardData = res.staff || [];
-            renderAdminStaffList();
+
+            if (captionEl) {
+              var modeLabel = (res.mode === 'not_out')
+                ? ('Showing ONLY Not Checked Out (' + adminBoardData.length + ') · As of ' + res.cutoffLabel)
+                : ('Showing ONLY Not Checked In (' + adminBoardData.length + ') · As of ' + res.cutoffLabel);
+              captionEl.innerText = modeLabel;
+            }
+
+            renderAdminStaffList(res);
             renderTempGeofenceStatus(res.tempGeofence);
           })
           .withFailureHandler(function(err) {
             listDiv.innerHTML = '<p style="text-align:center; color:#CC0000; font-weight:bold;">⚠️ ' + escapeHtml(err && err.message ? err.message : String(err)) + '</p>';
           })
-          .getLiveAttendanceBoard(adminId, token);
+          .getLiveAttendanceBoard(adminId, token, currentAdminMode, cutoffVal);
       }
 
-      function renderAdminStaffList() {
+      function renderAdminStaffList(res) {
         var listDiv = document.getElementById('admin-staff-list');
         if (!listDiv) return;
 
-        var filtered = adminBoardData.filter(function(s) {
-          if (adminCurrentFilter === 'all') return true;
-          return s.status === adminCurrentFilter;
-        });
+        if (res && res.cutoffReached === false) {
+          listDiv.innerHTML = '<p style="text-align:center; color:#64748b; font-size:13px; padding:16px 8px;">⏳ Set time (<b>' + escapeHtml(res.cutoffLabel || res.cutoffTime) + '</b>) has not been reached yet.</p>';
+          return;
+        }
 
-        if (filtered.length === 0) {
-          listDiv.innerHTML = '<p style="text-align:center; color:#666; font-size:14px; padding:16px 0;">No staff in this category.</p>';
+        if (adminBoardData.length === 0) {
+          var emptyMsg = (currentAdminMode === 'not_out')
+            ? '✅ Everyone who checked in today has checked out!'
+            : '✅ All staff have checked in!';
+          listDiv.innerHTML = '<p style="text-align:center; color:#155724; font-weight:bold; font-size:13px; padding:16px 8px;">' + emptyMsg + '</p>';
           return;
         }
 
         var html = '';
-        for (var i = 0; i < filtered.length; i++) {
-          var s = filtered[i];
+        for (var i = 0; i < adminBoardData.length; i++) {
+          var s = adminBoardData[i];
           var badgeHtml = '<span class="badge b-notin">Not In</span>';
           if (s.status === 'on_site') badgeHtml = '<span class="badge b-onsite">On-Site</span>';
           else if (s.status === 'off_site') badgeHtml = '<span class="badge b-offsite">Off-Site</span>';
@@ -1125,12 +1208,10 @@
           html += '    <div class="staff-name">' + escapeHtml(s.name) + '</div>';
           html += '    <div class="staff-meta">' + badgeHtml + escapeHtml(s.note || '') + ' · ' + escapeHtml(s.department || 'General') + '</div>';
           html += '  </div>';
-          if (s.status !== 'checked_out') {
-            if (isSent) {
-              html += '  <button type="button" class="nudge-btn" style="background-color:#11572C !important;" disabled>✅ Sent</button>';
-            } else {
-              html += '  <button type="button" class="nudge-btn" onclick="sendSingleNudge(\'' + safeId + '\', \'' + safeNameAttr + '\', this)">🔔 Nudge</button>';
-            }
+          if (isSent) {
+            html += '  <button type="button" class="nudge-btn" style="background-color:#11572C !important;" disabled>✅ Sent</button>';
+          } else {
+            html += '  <button type="button" class="nudge-btn" onclick="sendSingleNudge(\'' + safeId + '\', \'' + safeNameAttr + '\', this)">🔔 Nudge</button>';
           }
           html += '</div>';
         }
@@ -1184,6 +1265,12 @@
       }
 
       function triggerBulkNudge(mode) {
+        var requiredFilterMode = (mode === 'still_in') ? 'not_out' : 'not_in';
+        if (currentAdminMode !== requiredFilterMode) {
+          setAdminFilterMode(requiredFilterMode);
+          return;
+        }
+
         var toast = document.getElementById('admin-toast');
         var previewBox = document.getElementById('bulk-preview-box');
         var previewTitle = document.getElementById('bulk-preview-title');
@@ -1244,13 +1331,9 @@
             var isOk = (res && res.success !== false);
             if (isOk) {
               for (var i = 0; i < adminBoardData.length; i++) {
-                var st = adminBoardData[i].status;
-                if ((mode === 'still_in' && (st === 'on_site' || st === 'off_site')) ||
-                    (mode === 'not_in' && st === 'not_in')) {
-                  nudgedStaffIds[adminBoardData[i].empId] = true;
-                }
+                nudgedStaffIds[adminBoardData[i].empId] = true;
               }
-              renderAdminStaffList();
+              renderAdminStaffList(null);
             }
 
             toast.style.color = isOk ? '#11572C' : '#CC0000';
