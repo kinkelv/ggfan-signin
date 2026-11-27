@@ -148,6 +148,13 @@
       .pending-item-meta { font-size: 12px; color: #475569; margin: 3px 0 8px 0; line-height: 1.4; }
       .pending-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .pending-actions button { margin-top: 0; padding: 8px; font-size: 12px; border-radius: 6px; }
+    #pending-offsite-panel { display: none; }
+      .pending-card { background: #fffbeb; border: 1px solid #fde68a; border-left: 5px solid #d97706; border-radius: 8px; padding: 12px; margin-bottom: 10px; text-align: left; }
+      .pending-card-name { font-size: 15px; font-weight: bold; color: #0f172a; margin-bottom: 4px; }
+      .pending-card-detail { font-size: 13px; color: #334155; margin-bottom: 3px; line-height: 1.4; }
+      .pending-card-time { font-size: 12px; color: #78350f; font-weight: 600; margin-bottom: 10px; }
+      .pending-card-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .pending-card-btns button { margin-top: 0; padding: 10px 8px; font-size: 13px; border-radius: 6px; }
     </style>
   </head>
   <body>
@@ -211,8 +218,12 @@
         <button onclick="submitForm()" id="btn" style="display: none;">Submit</button>
 
         <!-- Appears automatically when a verified Admin ID is loaded -->
+        <!-- Appears automatically when a verified Admin ID is loaded -->
         <button type="button" id="admin-toggle-btn" onclick="openAdminBoard()" style="display: none; background-color: #1e293b; margin-top: 10px;">
           📊 Live
+        </button>
+        <button type="button" id="pending-offsite-btn" onclick="openPendingOffSitePanel()" style="display: none; background-color: #d97706; margin-top: 8px;">
+          ⏳ Off-Site Requests
         </button>
 
         <div id="offSiteBox" style="display:none; margin-top:15px; padding:12px; border:1px solid #f0ad4e; background:#fff8e6; border-radius:8px;">
@@ -340,7 +351,21 @@
           <p style="text-align:center; color:#666; font-size:14px;">Loading live attendance...</p>
         </div>
       </div>
+<!-- Dedicated Pending Off-Site Approvals Screen -->
+      <div id="pending-offsite-panel">
+        <div class="admin-topbar">
+          <button type="button" onclick="closePendingOffSitePanel()" style="background-color: #64748b;">← Back</button>
+          <span id="pending-panel-updated" style="font-size: 12px; color: #555; font-weight: bold;">Pending Off-Site</span>
+          <button type="button" onclick="refreshPendingOffSitePanel()" style="background-color: #11572C;">🔄 Refresh</button>
+        </div>
 
+        <div id="pending-panel-toast" style="font-size: 13px; font-weight: bold; text-align: center; margin-bottom: 8px; min-height: 18px;"></div>
+
+        <div id="pending-offsite-list">
+          <p style="text-align:center; color:#666; font-size:14px;">Loading pending requests...</p>
+        </div>
+      </div>
+      
       <div id="message"></div>
     </div>
 
@@ -496,9 +521,11 @@
           return true;
         }
 
-        if (Notification.permission === 'granted') {
+    if (Notification.permission === 'granted') {
           if (gate) gate.style.display = 'none';
-          if (formDiv && document.getElementById('admin-panel').style.display !== 'block') {
+          var adminOpen = document.getElementById('admin-panel') && document.getElementById('admin-panel').style.display === 'block';
+          var pendingOpen = document.getElementById('pending-offsite-panel') && document.getElementById('pending-offsite-panel').style.display === 'block';
+          if (formDiv && !adminOpen && !pendingOpen) {
             formDiv.style.display = 'block';
           }
           return true;
@@ -634,7 +661,7 @@
         }
       });
 
-      function handleIdInput() {
+   function handleIdInput() {
         clearTimeout(typingTimer);
         if (typeof stopOffSitePolling === 'function') {
           stopOffSitePolling();
@@ -643,6 +670,7 @@
         var statusInfo = document.getElementById('status-info');
         var btn = document.getElementById('btn');
         var adminBtn = document.getElementById('admin-toggle-btn');
+        var pendingBtn = document.getElementById('pending-offsite-btn');
         var verifyBox = document.getElementById('verify-box');
         var procBox = document.getElementById('offSiteProcessingBox');
         var msg = document.getElementById('message');
@@ -650,6 +678,7 @@
         msg.innerText = "";
         btn.style.display = "none";
         if (adminBtn) adminBtn.style.display = "none";
+        if (pendingBtn) pendingBtn.style.display = "none";
         verifyBox.style.display = "none";
         if (procBox) procBox.style.display = "none";
         document.getElementById('offSiteBox').style.display = "none";
@@ -713,7 +742,7 @@
                 }
               }
 
-             var pendingLock = getLocalPendingOffSite(empId);
+              var pendingLock = getLocalPendingOffSite(empId);
               if (pendingLock) {
                 btn.style.display = "none";
                 statusInfo.style.color = "#92400e";
@@ -731,6 +760,12 @@
 
               if (adminBtn && (ADMIN_IDS.indexOf(empId) !== -1 || res.isAdmin)) {
                 adminBtn.style.display = "block";
+                if (pendingBtn) {
+                  pendingBtn.style.display = "block";
+                  if (typeof updatePendingOffSiteBadge === 'function') {
+                    updatePendingOffSiteBadge(empId, deviceToken);
+                  }
+                }
               }
 
               // Sync off-site approval status from Google Sheets
@@ -755,7 +790,6 @@
                     clearLocalPendingOffSite();
                     showOffSiteDenied();
                   }
-                  // If offRes.status === 'none' and pendingLock exists, keep "Processing..." active
                 })
                 .getOffSiteApprovalStatus(empId, deviceToken, pendingLock ? pendingLock.submittedAt : 0);
             })
@@ -1616,6 +1650,123 @@ function renderPendingApprovals(list) {
             setTempGeoFeedback('⚠️ ' + (err && err.message ? err.message : err), true);
           })
           .clearTempGeofence(adminId, token);
+      }
+      // 6. Dedicated Pending Off-Site Approvals Screen
+      function updatePendingOffSiteBadge(adminId, token) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            var pendingBtn = document.getElementById('pending-offsite-btn');
+            if (!pendingBtn || !res || !res.authorized) return;
+            var count = (res.requests || []).length;
+            pendingBtn.innerText = count > 0
+              ? ('⏳ Pending Off-Site (' + count + ')')
+              : '⏳ Pending Off-Site';
+          })
+          .getPendingOffSiteRequests(adminId, token);
+      }
+
+      function openPendingOffSitePanel() {
+        document.getElementById('formDiv').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'none';
+        document.getElementById('message').innerText = '';
+        document.getElementById('pending-offsite-panel').style.display = 'block';
+        refreshPendingOffSitePanel();
+      }
+
+      function closePendingOffSitePanel() {
+        document.getElementById('pending-offsite-panel').style.display = 'none';
+        document.getElementById('formDiv').style.display = 'block';
+        handleIdInput();
+      }
+
+      function refreshPendingOffSitePanel() {
+        var adminId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id') || '';
+        var token = localStorage.getItem('ggfan_device_token') || '';
+        var listDiv = document.getElementById('pending-offsite-list');
+        var toast = document.getElementById('pending-panel-toast');
+
+        if (toast) toast.innerText = '';
+        if (listDiv) {
+          listDiv.innerHTML = '<p style="text-align:center; color:#666; font-size:14px;">Loading pending requests...</p>';
+        }
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res || !res.authorized) {
+              if (listDiv) {
+                listDiv.innerHTML = '<p style="text-align:center; color:#CC0000; font-weight:bold;">' + escapeHtml((res && res.error) || 'Access denied.') + '</p>';
+              }
+              return;
+            }
+
+            var updatedEl = document.getElementById('pending-panel-updated');
+            if (updatedEl) updatedEl.innerText = 'Updated ' + res.updatedAt;
+
+            var requests = res.requests || [];
+            var pendingBtn = document.getElementById('pending-offsite-btn');
+            if (pendingBtn) {
+              pendingBtn.innerText = requests.length > 0
+                ? ('⏳ Pending Off-Site (' + requests.length + ')')
+                : '⏳ Pending Off-Site';
+            }
+
+            if (requests.length === 0) {
+              listDiv.innerHTML = '<div style="padding:18px 12px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; color:#166534; font-size:14px; font-weight:bold; text-align:center;">✅ No pending off-site requests right now.</div>';
+              return;
+            }
+
+            var html = '';
+            for (var i = 0; i < requests.length; i++) {
+              var req = requests[i];
+              html += '<div class="pending-card">';
+              html += '  <div class="pending-card-name">' + escapeHtml(req.name) + '</div>';
+              html += '  <div class="pending-card-detail"><b>Reason:</b> ' + escapeHtml(req.reason) + '</div>';
+              html += '  <div class="pending-card-time">🕒 Time of Request: ' + escapeHtml(req.timeLabel) + ' (' + escapeHtml(req.action) + ')</div>';
+              html += '  <div class="pending-card-btns">';
+              html += '    <button type="button" style="background-color:#11572C;" onclick="submitPendingOffSiteDecision(' + Number(req.rowIndex) + ', \'approve\', this)">✅ Approve</button>';
+              html += '    <button type="button" style="background-color:#CC0000;" onclick="submitPendingOffSiteDecision(' + Number(req.rowIndex) + ', \'deny\', this)">✖ Deny</button>';
+              html += '  </div>';
+              html += '</div>';
+            }
+            listDiv.innerHTML = html;
+          })
+          .withFailureHandler(function(err) {
+            if (listDiv) {
+              listDiv.innerHTML = '<p style="text-align:center; color:#CC0000; font-weight:bold;">⚠️ ' + escapeHtml(err && err.message ? err.message : String(err)) + '</p>';
+            }
+          })
+          .getPendingOffSiteRequests(adminId, token);
+      }
+
+      function submitPendingOffSiteDecision(rowIndex, decision, btnEl) {
+        var adminId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id') || '';
+        var token = localStorage.getItem('ggfan_device_token') || '';
+        var toast = document.getElementById('pending-panel-toast');
+
+        if (btnEl && btnEl.parentNode) {
+          var btns = btnEl.parentNode.querySelectorAll('button');
+          for (var i = 0; i < btns.length; i++) {
+            btns[i].disabled = true;
+          }
+          btnEl.innerText = (decision === 'approve') ? 'Approving...' : 'Denying...';
+        }
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (toast) {
+              toast.style.color = (res && res.success && decision === 'approve') ? '#11572C' : '#CC0000';
+              toast.innerText = (res && res.message) || 'Updated.';
+            }
+            refreshPendingOffSitePanel();
+          })
+          .withFailureHandler(function(err) {
+            if (toast) {
+              toast.style.color = '#CC0000';
+              toast.innerText = '⚠️ ' + (err && err.message ? err.message : err);
+            }
+            refreshPendingOffSitePanel();
+          })
+          .handleOffSiteDecision(adminId, token, rowIndex, decision);
       }
     </script>
   </body>
