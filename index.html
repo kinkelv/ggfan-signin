@@ -246,7 +246,7 @@
         <!-- Active Temporary Geofence Banner -->
         <div id="temp-geo-active-banner" class="temp-geo-active" style="display:none;">
           <div id="temp-geo-active-text" style="font-weight:bold; margin-bottom:6px;"></div>
-          <button type="button" onclick="deactivateTempGeofence()" style="background-color:#CC0000; padding:8px; font-size:12px; margin-top:0;">✖ End Temporary Geofence Now</button>
+          <button type="button" onclick="deactivateTempGeofence()" style="background-color:#CC0000; padding:8px; font-size:12px; margin-top:0;">✖ End Temp Geo</button>
         </div>
 
         <!-- Set Temporary Geofence Using Admin Phone GPS -->
@@ -1101,7 +1101,7 @@
             var token = localStorage.getItem('ggfan_device_token') || '';
 
             if (btn) btn.innerText = 'Saving zone...';
-            setTempGeoFeedback('GPS locked. Saving temporary zone...', false);
+            setTempGeoFeedback('GPS locked. Saving temp zone...', false);
 
             google.script.run
               .withSuccessHandler(function(res) {
@@ -1141,7 +1141,7 @@
         var adminId = (empInput && empInput.value.trim()) || localStorage.getItem('ggfan_emp_id') || '';
         var token = localStorage.getItem('ggfan_device_token') || '';
 
-        setTempGeoFeedback('Ending temporary geofence...', false);
+        setTempGeoFeedback('Ending temp geo...', false);
         google.script.run
           .withSuccessHandler(function(res) {
             if (res && res.success) {
