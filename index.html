@@ -134,6 +134,12 @@
       .temp-geo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
       .temp-geo-grid select, .temp-geo-box input { padding: 8px 10px; font-size: 13px; margin: 0; border-radius: 6px; border: 1px solid #cbd5e1; width: 100%; box-sizing: border-box; }
       .temp-geo-active { background-color: #fffbeb; border: 1px solid #fde68a; border-left: 5px solid #d97706; border-radius: 8px; padding: 10px 12px; margin: 10px 0 12px 0; text-align: left; font-size: 13px; color: #78350f; }
+    .reason-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+      .reason-chip { width: auto; padding: 5px 10px; margin-top: 0; font-size: 12px; font-weight: 600; background-color: #ffffff; color: #8a6d3b; border: 1px solid #f0ad4e; border-radius: 16px; }
+      .reason-chip:hover { background-color: #fef3c7; opacity: 1; }
+      #offSiteProcessingBox { display: none; margin-top: 15px; padding: 16px 14px; border: 1px solid #fde68a; border-left: 5px solid #d97706; background: #fffbeb; border-radius: 8px; text-align: center; }
+      #offSiteProcessingText { margin: 0; font-size: 15px; font-weight: bold; color: #92400e; line-height: 1.45; }
+      #offSiteProcessingSub { margin: 6px 0 0 0; font-size: 12px; color: #78350f; }
     </style>
   </head>
   <body>
@@ -205,10 +211,23 @@
           <p style="margin:0 0 8px; font-size:14px; color:#8a6d3b;">
             <b>Away From the Office:</b> In the farm, Attending a Meeting or on an Errand?
           </p>
+          <div class="reason-chips">
+            <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Farm Visit'">Bank</button>
+            <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Bank / Town Errand'">Shopping</button>
+            <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Field Outreach'">Training</button>
+            <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Meeting'">Meeting</button>
+            <button type="button" class="reason-chip" onclick="document.getElementById('offSiteReason').value='Training'">Personal</button>
+          </div>
           <input type="text" id="offSiteReason" placeholder="Enter brief reason (e.g., Bank, Training or Meeting)" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box; border:1px solid #ccc; border-radius:6px;">
           <button type="button" id="offSiteBtn" onclick="submitOffSiteRequest()" style="width:100%; padding:10px; background:#e67e22; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-top:0;">
             Request Off-Site Approval
           </button>
+        </div>
+
+        <div id="offSiteProcessingBox">
+          <p id="offSiteProcessingText">⏳ Processing...</p>
+          <p id="offSiteProcessingSub">Waiting for admin approval...</p>
+          <button type="button" id="offSiteResetBtn" onclick="resetSignInScreen()" style="display:none; background-color:#64748b; padding:10px; font-size:13px; margin-top:12px;">← Back to Sign-In</button>
         </div>
       </div>
 
@@ -587,19 +606,24 @@
         }
       });
 
-      function handleIdInput() {
+   function handleIdInput() {
         clearTimeout(typingTimer);
+        if (typeof stopOffSitePolling === 'function') {
+          stopOffSitePolling();
+        }
         var empId = document.getElementById('empId').value.trim();
         var statusInfo = document.getElementById('status-info');
         var btn = document.getElementById('btn');
         var adminBtn = document.getElementById('admin-toggle-btn');
         var verifyBox = document.getElementById('verify-box');
+        var procBox = document.getElementById('offSiteProcessingBox');
         var msg = document.getElementById('message');
         
         msg.innerText = "";
         btn.style.display = "none";
         if (adminBtn) adminBtn.style.display = "none";
         verifyBox.style.display = "none";
+        if (procBox) procBox.style.display = "none";
         document.getElementById('offSiteBox').style.display = "none";
         document.getElementById('otp-section').style.display = "none";
         document.getElementById('otp-msg').innerText = "";
@@ -645,6 +669,7 @@
                 });
               }
 
+              window.lastVerifiedEmpName = res.name || "";
               currentAction = res.nextAction;
               var firstName = res.name ? res.name.trim().split(' ')[0] : '';
 
@@ -673,6 +698,17 @@
               if (adminBtn && (ADMIN_IDS.indexOf(empId) !== -1 || res.isAdmin)) {
                 adminBtn.style.display = "block";
               }
+
+              // Resume "Processing..." screen automatically if an off-site request is still pending today
+              google.script.run
+                .withSuccessHandler(function(offRes) {
+                  if (document.getElementById('empId').value.trim() !== empId) return;
+                  if (offRes && offRes.status === 'pending' && typeof showOffSiteProcessing === 'function') {
+                    btn.style.display = "none";
+                    showOffSiteProcessing(empId, deviceToken, 0, res.name);
+                  }
+                })
+                .getOffSiteApprovalStatus(empId, deviceToken, 0);
             })
             .withFailureHandler(function(err) {
               statusInfo.style.color = "#CC0000";
@@ -864,11 +900,104 @@
           .processSignIn(empId, action, lat, lon, deviceToken);
       }
 
+   var offSitePollTimer = null;
+
+      function stopOffSitePolling() {
+        if (offSitePollTimer) {
+          clearInterval(offSitePollTimer);
+          offSitePollTimer = null;
+        }
+      }
+
+      function showOffSiteProcessing(empId, deviceToken, submittedAtMs, cachedName) {
+        stopOffSitePolling();
+        var box = document.getElementById('offSiteProcessingBox');
+        var textEl = document.getElementById('offSiteProcessingText');
+        var subEl = document.getElementById('offSiteProcessingSub');
+        var resetBtn = document.getElementById('offSiteResetBtn');
+
+        if (box) {
+          box.style.backgroundColor = '#fffbeb';
+          box.style.borderColor = '#fde68a';
+          box.style.borderLeftColor = '#d97706';
+          box.style.display = 'block';
+        }
+        if (textEl) {
+          textEl.style.color = '#92400e';
+          textEl.innerText = '⏳ Processing...';
+        }
+        if (subEl) {
+          subEl.style.display = 'block';
+          subEl.innerText = 'Waiting for admin approval...';
+        }
+        if (resetBtn) resetBtn.style.display = 'none';
+
+        function checkNow() {
+          google.script.run
+            .withSuccessHandler(function(statusRes) {
+              if (!statusRes || statusRes.status === 'pending' || statusRes.status === 'none') return;
+
+              stopOffSitePolling();
+
+              if (statusRes.status === 'approved') {
+                if (box) box.style.display = 'none';
+                var msg = document.getElementById('message');
+                var approvedAction = statusRes.action || currentAction || 'Check In';
+                var label = (approvedAction.toLowerCase() === 'check out')
+                  ? '✅ Check-out approved'
+                  : '✅ Check-in approved';
+
+                if (msg) {
+                  msg.style.color = 'green';
+                  msg.innerText = label;
+                }
+
+                // Show "Check-in approved" for 2.5 seconds, then switch button to the next action
+                autoResetTimer = setTimeout(function() {
+                  if (msg) msg.innerText = '';
+                  var btn = document.getElementById('btn');
+                  var statusInfo = document.getElementById('status-info');
+                  var nextAct = (approvedAction.toLowerCase() === 'check out') ? 'Check In' : 'Check Out';
+
+                  currentAction = nextAct;
+                  if (statusInfo && cachedName) {
+                    statusInfo.style.color = '#11572C';
+                    statusInfo.innerText = getSmartGreeting(cachedName, nextAct);
+                  }
+                  if (btn) {
+                    btn.innerText = nextAct;
+                    btn.style.backgroundColor = (nextAct === 'Check Out') ? '#CC0000' : '#11572C';
+                    btn.disabled = false;
+                    btn.style.display = 'block';
+                  }
+                  handleIdInput();
+                }, 2500);
+              } else if (statusRes.status === 'denied') {
+                if (box) {
+                  box.style.backgroundColor = '#fff8f8';
+                  box.style.borderColor = '#f5c6cb';
+                  box.style.borderLeftColor = '#CC0000';
+                  box.style.display = 'block';
+                }
+                if (textEl) {
+                  textEl.style.color = '#CC0000';
+                  textEl.innerText = '❌ Denied, contact admin';
+                }
+                if (subEl) subEl.style.display = 'none';
+                if (resetBtn) resetBtn.style.display = 'block';
+              }
+            })
+            .getOffSiteApprovalStatus(empId, deviceToken, submittedAtMs);
+        }
+
+        offSitePollTimer = setInterval(checkNow, 3000);
+      }
+
       function submitOffSiteRequest() {
         var empId = document.getElementById('empId').value.trim();
         var reason = document.getElementById('offSiteReason').value.trim();
         var btn = document.getElementById('offSiteBtn');
-        var msg = document.getElementById('message');
+        var deviceToken = window.lastDeviceToken || localStorage.getItem('ggfan_device_token') || '';
 
         if (!reason) {
           alert("Please enter a brief reason.");
@@ -877,6 +1006,7 @@
 
         btn.disabled = true;
         btn.innerText = "Sending Request...";
+        var submittedAtMs = Date.now();
 
         google.script.run
           .withSuccessHandler(function(res) {
@@ -884,12 +1014,8 @@
             btn.innerText = "Request Off-Site Approval";
             if (res && res.success) {
               document.getElementById('offSiteBox').style.display = 'none';
-              document.getElementById('formDiv').style.display = 'none';
-              if (msg) {
-                msg.style.color = "green";
-                msg.innerText = "✅ " + res.message;
-              }
-              autoResetTimer = setTimeout(resetSignInScreen, 2500);
+              document.getElementById('offSiteReason').value = '';
+              showOffSiteProcessing(empId, deviceToken, submittedAtMs, '');
             } else {
               alert((res && res.message) || "Could not submit off-site request.");
             }
@@ -899,7 +1025,7 @@
             btn.innerText = "Request Off-Site Approval";
             alert("⚠️ Error: " + (err && err.message ? err.message : err));
           })
-          .requestOffSiteCheckIn(empId, currentAction, window.lastLat, window.lastLng, reason, window.lastDeviceToken);
+          .requestOffSiteCheckIn(empId, currentAction, window.lastLat, window.lastLng, reason, deviceToken);
       }
       
 
