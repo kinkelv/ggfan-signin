@@ -137,6 +137,12 @@
       .preview-dept { color: #555; font-size: 12px; }
       .preview-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .preview-actions button { margin-top: 0; padding: 10px 8px; font-size: 13px; }
+      .temp-geo-box { background-color: #f0f7f2; border: 1px solid #c3e6cb; border-left: 5px solid #11572C; border-radius: 8px; padding: 12px; margin-bottom: 12px; text-align: left; }
+      .temp-geo-title { font-size: 13px; font-weight: bold; color: #11572C; margin: 0 0 8px 0; }
+      .temp-geo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+      .temp-geo-grid select, .temp-geo-box input { padding: 8px 10px; font-size: 13px; margin: 0; border-radius: 6px; border: 1px solid #cbd5e1; width: 100%; box-sizing: border-box; }
+      .temp-geo-active { background-color: #fffbeb; border: 1px solid #fde68a; border-left: 5px solid #d97706; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; text-align: left; font-size: 13px; color: #78350f; }
+    </style>
     </style>
   </head>
   <body>
@@ -245,7 +251,34 @@
         </div>
 
         <input type="text" id="admin-nudge-note" placeholder="custom nudge (blank for auto)..." style="padding:9px 10px; font-size:13px; margin-top:6px;">
+        
+<!-- Active Temporary Geofence Banner -->
+        <div id="temp-geo-active-banner" class="temp-geo-active" style="display:none;">
+          <div id="temp-geo-active-text" style="font-weight:bold; margin-bottom:6px;"></div>
+          <button type="button" onclick="deactivateTempGeofence()" style="background-color:#CC0000; padding:8px; font-size:12px; margin-top:0;">✖ End Temporary Geofence Now</button>
+        </div>
 
+        <!-- Set Temporary Geofence Using Admin Phone GPS -->
+        <div class="temp-geo-box">
+          <div class="temp-geo-title">📍 Temporary Geofence (Use My Phone Location)</div>
+          <input type="text" id="temp-geo-label" placeholder="Site name (e.g., Outreach Venue, Conference)...">
+          <div class="temp-geo-grid">
+            <select id="temp-geo-radius">
+              <option value="100">Radius: 100m</option>
+              <option value="200" selected>Radius: 200m</option>
+              <option value="350">Radius: 350m</option>
+              <option value="500">Radius: 500m</option>
+            </select>
+            <select id="temp-geo-duration">
+              <option value="0.1666667">For 10 Mins</option>
+              <option value="0.5">For 30 Mins</option>
+              <option value="1" selected>For 1 Hour</option>
+              <option value="2">For 2 Hours</option>
+            </select>
+          </div>
+          <button type="button" id="set-temp-geo-btn" onclick="activateTempGeofenceHere()" style="background-color:#11572C; padding:10px; font-size:13px; margin-top:8px;">📍 Set Temp Geofence Here</button>
+        </div>
+        
         <div class="bulk-row">
           <button type="button" id="bulk-out-btn" onclick="triggerBulkNudge('still_in')" style="background-color: #CC0000;">🔔 Not Out</button>
           <button type="button" id="bulk-in-btn" onclick="triggerBulkNudge('not_in')" style="background-color: #d97706;">🔔 Not In</button>
@@ -872,6 +905,88 @@
             document.getElementById('cnt-notin').innerText = res.counts.notIn;
             adminBoardData = res.staff || [];
             renderAdminStaffList();
+            
+            function renderTempGeofenceStatus(geo) {
+        var banner = document.getElementById('temp-geo-active-banner');
+        var textEl = document.getElementById('temp-geo-active-text');
+        if (!banner || !textEl) return;
+
+        if (geo && geo.label) {
+          textEl.innerText = '🟢 Active Temp Zone: ' + geo.label + ' (' + geo.radius + 'm) — Expires ' + geo.expiresLabel;
+          banner.style.display = 'block';
+        } else {
+          banner.style.display = 'none';
+        }
+      }
+
+      function activateTempGeofenceHere() {
+        var btn = document.getElementById('set-temp-geo-btn');
+        var toast = document.getElementById('admin-toast');
+        var label = document.getElementById('temp-geo-label').value.trim();
+        var radius = document.getElementById('temp-geo-radius').value;
+        var duration = document.getElementById('temp-geo-duration').value;
+
+        if (!navigator.geolocation) {
+          toast.style.color = '#CC0000';
+          toast.innerText = '⚠️ GPS is not supported on this browser.';
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = '📡 Locking phone GPS...';
+        toast.innerText = '';
+
+        navigator.geolocation.getCurrentPosition(
+          function(pos) {
+            var adminId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id') || '';
+            var token = localStorage.getItem('ggfan_device_token') || '';
+
+            btn.innerText = 'Saving zone...';
+            google.script.run
+              .withSuccessHandler(function(res) {
+                btn.disabled = false;
+                btn.innerText = '📍 Set Temp Geofence Here';
+                toast.style.color = res.success ? '#11572C' : '#CC0000';
+                toast.innerText = (res.success ? '✅ ' : '⚠️ ') + res.message;
+                if (res.success && res.geofence) {
+                  renderTempGeofenceStatus(res.geofence);
+                }
+              })
+              .withFailureHandler(function(err) {
+                btn.disabled = false;
+                btn.innerText = '📍 Set Temp Geofence Here';
+                toast.style.color = '#CC0000';
+                toast.innerText = '⚠️ ' + err.message;
+              })
+              .setTempGeofence(adminId, token, label, pos.coords.latitude, pos.coords.longitude, radius, duration);
+          },
+          function(geoErr) {
+            btn.disabled = false;
+            btn.innerText = '📍 Set Temp Geofence Here';
+            toast.style.color = '#CC0000';
+            toast.innerText = '⚠️ GPS error: ' + geoErr.message + ' (Ensure Location is ON).';
+          },
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+      }
+
+      function deactivateTempGeofence() {
+        var adminId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id') || '';
+        var token = localStorage.getItem('ggfan_device_token') || '';
+        var toast = document.getElementById('admin-toast');
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            toast.style.color = res.success ? '#11572C' : '#CC0000';
+            toast.innerText = (res.success ? '✅ ' : '⚠️ ') + res.message;
+            if (res.success) renderTempGeofenceStatus(null);
+          })
+          .withFailureHandler(function(err) {
+            toast.style.color = '#CC0000';
+            toast.innerText = '⚠️ ' + err.message;
+          })
+          .clearTempGeofence(adminId, token);
+      }
           })
           .withFailureHandler(function(err) {
             listDiv.innerHTML = '<p style="text-align:center; color:#CC0000;">⚠️ ' + escapeHtml(err.message) + '</p>';
