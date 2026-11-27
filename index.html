@@ -700,24 +700,49 @@
                 }
               }
 
-              statusInfo.style.color = "#11572C";
-              statusInfo.innerText = getSmartGreeting(res.name, currentAction);
-              
-              btn.innerText = currentAction;
-              btn.style.backgroundColor = (currentAction === "Check Out") ? "#CC0000" : "#11572C";
-              btn.disabled = false;
-              btn.style.display = "block";
+             var pendingLock = getLocalPendingOffSite(empId);
+              if (pendingLock) {
+                btn.style.display = "none";
+                statusInfo.style.color = "#92400e";
+                statusInfo.innerText = "Hi " + firstName + ", off-site request submitted.";
+                showOffSiteProcessing(empId, deviceToken, pendingLock.submittedAt || 0, res.name);
+              } else {
+                statusInfo.style.color = "#11572C";
+                statusInfo.innerText = getSmartGreeting(res.name, currentAction);
+
+                btn.innerText = currentAction;
+                btn.style.backgroundColor = (currentAction === "Check Out") ? "#CC0000" : "#11572C";
+                btn.disabled = false;
+                btn.style.display = "block";
+              }
 
               if (adminBtn && (ADMIN_IDS.indexOf(empId) !== -1 || res.isAdmin)) {
                 adminBtn.style.display = "block";
               }
 
+              // Sync off-site approval status from Google Sheets
               google.script.run
                 .withSuccessHandler(function(offRes) {
                   if (document.getElementById('empId').value.trim() !== empId) return;
-                  if (offRes && offRes.status === 'pending' && typeof showOffSiteProcessing === 'function') {
+                  if (offRes && offRes.status === 'pending') {
+                    saveLocalPendingOffSite(empId, offRes.action || currentAction, pendingLock ? pendingLock.submittedAt : 0);
                     btn.style.display = "none";
                     showOffSiteProcessing(empId, deviceToken, 0, res.name);
+                  } else if (pendingLock) {
+                    clearLocalPendingOffSite();
+                    var procBox = document.getElementById('offSiteProcessingBox');
+                    if (procBox) procBox.style.display = "none";
+
+                    if (offRes && offRes.status === 'denied') {
+                      showOffSiteDenied();
+                    } else {
+                      statusInfo.style.color = "#11572C";
+                      statusInfo.innerText = getSmartGreeting(res.name, currentAction);
+                      btn.innerText = currentAction;
+                      btn.style.backgroundColor = (currentAction === "Check Out") ? "#CC0000" : "#11572C";
+                      btn.disabled = false;
+                      btn.style.display = "block";
+                    }
                   }
                 })
                 .getOffSiteApprovalStatus(empId, deviceToken, 0);
@@ -843,16 +868,53 @@
 
       var autoResetTimer = null;
 
+    function getTodayDateKey() {
+        var d = new Date();
+        return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+      }
+
+      function saveLocalPendingOffSite(empId, action, submittedAtMs) {
+        try {
+          localStorage.setItem('ggfan_pending_offsite', JSON.stringify({
+            empId: String(empId || '').trim(),
+            action: action || 'Check In',
+            submittedAt: submittedAtMs || Date.now(),
+            dateKey: getTodayDateKey()
+          }));
+        } catch (e) {}
+      }
+
+      function getLocalPendingOffSite(empId) {
+        try {
+          var raw = localStorage.getItem('ggfan_pending_offsite');
+          if (!raw) return null;
+          var data = JSON.parse(raw);
+          if (data && data.empId === String(empId || '').trim() && data.dateKey === getTodayDateKey()) {
+            return data;
+          }
+          localStorage.removeItem('ggfan_pending_offsite');
+        } catch (e) {}
+        return null;
+      }
+
+      function clearLocalPendingOffSite() {
+        try { localStorage.removeItem('ggfan_pending_offsite'); } catch (e) {}
+      }
+
       function resetSignInScreen() {
         clearTimeout(autoResetTimer);
+        stopOffSitePolling();
+        clearLocalPendingOffSite();
         var msg = document.getElementById('message');
         var formDiv = document.getElementById('formDiv');
         var offSiteBox = document.getElementById('offSiteBox');
+        var procBox = document.getElementById('offSiteProcessingBox');
         var offSiteReason = document.getElementById('offSiteReason');
         var empInput = document.getElementById('empId');
 
         if (msg) msg.innerText = "";
         if (offSiteBox) offSiteBox.style.display = "none";
+        if (procBox) procBox.style.display = "none";
         if (offSiteReason) offSiteReason.value = "";
         if (formDiv && checkNotificationGate()) {
           formDiv.style.display = "block";
@@ -922,6 +984,26 @@
         }
       }
 
+      function showOffSiteDenied() {
+        var box = document.getElementById('offSiteProcessingBox');
+        var textEl = document.getElementById('offSiteProcessingText');
+        var subEl = document.getElementById('offSiteProcessingSub');
+        var resetBtn = document.getElementById('offSiteResetBtn');
+
+        if (box) {
+          box.style.backgroundColor = '#fff8f8';
+          box.style.borderColor = '#f5c6cb';
+          box.style.borderLeftColor = '#CC0000';
+          box.style.display = 'block';
+        }
+        if (textEl) {
+          textEl.style.color = '#CC0000';
+          textEl.innerText = '❌ Denied, contact admin';
+        }
+        if (subEl) subEl.style.display = 'none';
+        if (resetBtn) resetBtn.style.display = 'block';
+      }
+
       function showOffSiteProcessing(empId, deviceToken, submittedAtMs, cachedName) {
         stopOffSitePolling();
         var box = document.getElementById('offSiteProcessingBox');
@@ -951,6 +1033,7 @@
               if (!statusRes || statusRes.status === 'pending' || statusRes.status === 'none') return;
 
               stopOffSitePolling();
+              clearLocalPendingOffSite();
 
               if (statusRes.status === 'approved') {
                 if (box) box.style.display = 'none';
@@ -985,18 +1068,7 @@
                   handleIdInput();
                 }, 2500);
               } else if (statusRes.status === 'denied') {
-                if (box) {
-                  box.style.backgroundColor = '#fff8f8';
-                  box.style.borderColor = '#f5c6cb';
-                  box.style.borderLeftColor = '#CC0000';
-                  box.style.display = 'block';
-                }
-                if (textEl) {
-                  textEl.style.color = '#CC0000';
-                  textEl.innerText = '❌ Denied, contact admin';
-                }
-                if (subEl) subEl.style.display = 'none';
-                if (resetBtn) resetBtn.style.display = 'block';
+                showOffSiteDenied();
               }
             })
             .getOffSiteApprovalStatus(empId, deviceToken, submittedAtMs);
@@ -1025,6 +1097,7 @@
             btn.disabled = false;
             btn.innerText = "Request Off-Site Approval";
             if (res && res.success) {
+              saveLocalPendingOffSite(empId, currentAction, submittedAtMs);
               document.getElementById('offSiteBox').style.display = 'none';
               document.getElementById('offSiteReason').value = '';
               showOffSiteProcessing(empId, deviceToken, submittedAtMs, window.lastVerifiedEmpName || '');
