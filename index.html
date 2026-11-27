@@ -1141,10 +1141,28 @@
           .withSuccessHandler(function(res) {
             btn.disabled = false;
             btn.innerText = "Request Off-Site Approval";
-            if (res && res.success) {
-              saveLocalPendingOffSite(empId, currentAction, submittedAtMs);
+          if (res && res.success) {
               document.getElementById('offSiteBox').style.display = 'none';
               document.getElementById('offSiteReason').value = '';
+
+              if (res.autoApproved) {
+                clearLocalPendingOffSite();
+                var msg = document.getElementById('message');
+                var approvedAction = res.action || currentAction || 'Check In';
+                if (msg) {
+                  msg.style.color = 'green';
+                  msg.innerText = (approvedAction.toLowerCase() === 'check out')
+                    ? '✅ Check-out approved'
+                    : '✅ Check-in approved';
+                }
+                autoResetTimer = setTimeout(function() {
+                  if (msg) msg.innerText = '';
+                  handleIdInput();
+                }, 2500);
+                return;
+              }
+
+              saveLocalPendingOffSite(empId, currentAction, submittedAtMs);
               showOffSiteProcessing(empId, deviceToken, submittedAtMs, window.lastVerifiedEmpName || '');
             } else {
               alert((res && res.message) || "Could not submit off-site request.");
