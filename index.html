@@ -845,7 +845,8 @@
       // 5. Live Admin "Who's In" View, Nudges & Temporary Geofence
       var adminBoardData = [];
       var adminCurrentFilter = 'all';
-      var pendingBulkMode = '';
+     var pendingBulkMode = '';
+      var nudgedStaffIds = {};
 
       function openAdminBoard() {
         document.getElementById('formDiv').style.display = 'none';
@@ -876,6 +877,7 @@
 
       function refreshAdminBoard() {
         closeBulkPreview();
+        nudgedStaffIds = {};
         var adminId = document.getElementById('empId').value.trim() || localStorage.getItem('ggfan_emp_id') || '';
         var token = localStorage.getItem('ggfan_device_token') || '';
         var listDiv = document.getElementById('admin-staff-list');
@@ -929,6 +931,7 @@
 
           var safeId = escapeHtml(s.empId);
           var safeNameAttr = String(s.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+          var isSent = !!nudgedStaffIds[s.empId];
 
           html += '<div class="staff-row">';
           html += '  <div class="staff-info">';
@@ -936,7 +939,11 @@
           html += '    <div class="staff-meta">' + badgeHtml + escapeHtml(s.note || '') + ' · ' + escapeHtml(s.department || 'General') + '</div>';
           html += '  </div>';
           if (s.status !== 'checked_out') {
-            html += '  <button type="button" class="nudge-btn" onclick="sendSingleNudge(\'' + safeId + '\', \'' + safeNameAttr + '\', this)">🔔 Nudge</button>';
+            if (isSent) {
+              html += '  <button type="button" class="nudge-btn" style="background-color:#11572C !important;" disabled>✅ Sent</button>';
+            } else {
+              html += '  <button type="button" class="nudge-btn" onclick="sendSingleNudge(\'' + safeId + '\', \'' + safeNameAttr + '\', this)">🔔 Nudge</button>';
+            }
           }
           html += '</div>';
         }
@@ -956,12 +963,27 @@
 
         google.script.run
           .withSuccessHandler(function(res) {
-            if (btnEl) {
-              btnEl.disabled = false;
-              btnEl.innerText = '🔔 Nudge';
+            var isOk = (typeof res === 'string')
+              ? (res.toLowerCase().indexOf('error') === -1 && res.toLowerCase().indexOf('unauthor') === -1)
+              : (res && res.success !== false);
+
+            if (isOk) {
+              nudgedStaffIds[targetEmpId] = true;
+              if (btnEl) {
+                btnEl.disabled = true;
+                btnEl.style.setProperty('background-color', '#11572C', 'important');
+                btnEl.innerText = '✅ Sent';
+              }
+              toast.style.color = '#11572C';
+              toast.innerText = (res && res.message) ? res.message : ('✅ Nudge sent to ' + targetName);
+            } else {
+              if (btnEl) {
+                btnEl.disabled = false;
+                btnEl.innerText = '🔔 Nudge';
+              }
+              toast.style.color = '#CC0000';
+              toast.innerText = '⚠️ ' + ((res && res.message) || 'Failed to send nudge.');
             }
-            toast.style.color = (res && res.success) ? '#11572C' : '#CC0000';
-            toast.innerText = (res && res.message) || ('Nudge sent to ' + targetName);
           })
           .withFailureHandler(function(err) {
             if (btnEl) {
@@ -1031,8 +1053,21 @@
               confirmBtn.innerText = '✅ Confirm & Send';
             }
             closeBulkPreview();
-            toast.style.color = (res && res.success) ? '#11572C' : '#CC0000';
-            toast.innerText = (res && res.message) || 'Bulk reminder sent.';
+
+            var isOk = (res && res.success !== false);
+            if (isOk) {
+              for (var i = 0; i < adminBoardData.length; i++) {
+                var st = adminBoardData[i].status;
+                if ((mode === 'still_in' && (st === 'on_site' || st === 'off_site')) ||
+                    (mode === 'not_in' && st === 'not_in')) {
+                  nudgedStaffIds[adminBoardData[i].empId] = true;
+                }
+              }
+              renderAdminStaffList();
+            }
+
+            toast.style.color = isOk ? '#11572C' : '#CC0000';
+            toast.innerText = (res && res.message) || '✅ Bulk reminder sent.';
           })
           .withFailureHandler(function(err) {
             if (confirmBtn) {
